@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Premiot Calculator — Allison Edition</title>
+<!-- Preconnect for faster font loading -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Load Heebo font; fallback to system Hebrew-friendly fonts if offline -->
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;600;700;800&display=swap" rel="stylesheet"></noscript>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0a0f1e;
+    font-family: 'Heebo', 'Arial Hebrew', 'David', Arial, sans-serif;
+    direction: rtl;
+    color: #f1f5f9;
+    min-height: 100vh;
+    padding-bottom: 60px;
+  }
+
+  .header {
+    background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #0f172a 100%);
+    border-bottom: 1px solid rgba(37,99,235,0.3);
+    padding: 28px 20px 20px;
+    text-align: center;
+  }
+  .header .sub { font-size: 11px; color: #3b82f6; font-weight: 700; letter-spacing: 0.18em; margin-bottom: 8px; }
+  .header h1 { font-size: 26px; font-weight: 800; color: #f1f5f9; }
+  .header p { margin-top: 5px; color: #64748b; font-size: 13px; }
+
+  .container { max-width: 720px; margin: 0 auto; padding: 20px 14px; }
+
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
+
+  .section-title {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 10px; margin-top: 20px;
+  }
+  .section-title span { font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.08em; }
+  .section-title .line { flex: 1; height: 1px; background: rgba(255,255,255,0.06); }
+
+  .input-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 9px 12px; border-radius: 8px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    margin-bottom: 5px; gap: 8px;
+  }
+  .input-row label { font-size: 13px; color: #cbd5e1; flex: 1; }
+  .input-row .unit { font-size: 11px; color: #64748b; white-space: nowrap; }
+  .input-row input {
+    width: 80px; padding: 5px 7px; border-radius: 6px;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.08);
+    color: #f1f5f9; font-size: 14px; font-weight: 600;
+    text-align: center; outline: none; font-family: monospace;
+  }
+  .input-row input:focus { border-color: rgba(37,99,235,0.5); background: rgba(37,99,235,0.08); }
+
+  /* Tooltip */
+  .tip-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 17px; height: 17px; border-radius: 50%; background: #2563eb;
+    color: #fff; font-size: 10px; font-weight: 700; cursor: pointer;
+    border: none; user-select: none; flex-shrink: 0; position: relative;
+  }
+  .tip-box {
+    display: none; position: absolute; bottom: calc(100% + 8px); right: 0;
+    background: #1e293b; color: #e2e8f0; border-radius: 8px;
+    padding: 10px 14px; font-size: 12px; line-height: 1.7; z-index: 999;
+    width: 240px; box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    white-space: pre-line; text-align: right; border: 1px solid rgba(255,255,255,0.1);
+    pointer-events: none;
+  }
+  .tip-btn.open .tip-box { display: block; }
+
+  .result-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 12px; border-radius: 8px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    margin-bottom: 4px;
+  }
+  .result-row.accent {
+    background: rgba(37,99,235,0.12);
+    border-color: rgba(37,99,235,0.35);
+  }
+  .result-row .rlabel { font-size: 12px; color: #94a3b8; }
+  .result-row .rvalue { font-size: 14px; font-weight: 700; color: #e2e8f0; font-family: monospace; }
+  .result-row.accent .rlabel { color: #93c5fd; }
+  .result-row.accent .rvalue { color: #3b82f6; }
+
+  .alert {
+    border-radius: 10px; padding: 12px 14px; margin-bottom: 14px;
+  }
+  .alert.danger { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.4); }
+  .alert.warning { background: rgba(251,191,36,0.08); border: 1px solid rgba(251,191,36,0.3); }
+  .alert.success { background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.3); }
+  .alert .atitle { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+  .alert.danger .atitle { color: #ef4444; }
+  .alert.warning .atitle { color: #fbbf24; }
+  .alert.success .atitle { color: #22c55e; }
+  .alert .abody { font-size: 12px; line-height: 1.6; }
+  .alert.danger .abody { color: #fca5a5; }
+  .alert.warning .abody { color: #fde68a; }
+  .alert.success .abody { color: #86efac; }
+
+  .total-box {
+    background: linear-gradient(135deg, rgba(37,99,235,0.2), rgba(29,78,216,0.1));
+    border: 1px solid rgba(37,99,235,0.5);
+    border-radius: 14px; padding: 20px 16px; text-align: center; margin-top: 16px;
+  }
+  .total-box .tlabel { font-size: 12px; color: #93c5fd; font-weight: 600; margin-bottom: 6px; }
+  .total-box .tamount { font-size: 38px; font-weight: 800; color: #3b82f6; font-family: monospace; }
+  .total-box .tsub { font-size: 11px; color: #475569; margin-top: 8px; }
+
+  .divider { height: 8px; }
+</style>
+</head>
+<body>
+
+<noscript>
+<div style="background:#ef4444; color:#fff; text-align:center; padding:16px; font-size:15px; font-weight:700; direction:rtl; font-family:Arial,sans-serif;">
+  ⚠️ הקובץ הזה לא עובד באפליקציית HTML Viewer. יש לפתוח אותו בדפדפן — Chrome או Safari.
+</div>
+</noscript>
+<div id="wrong-app-banner" style="display:none; background:#ef4444; color:#fff; text-align:center; padding:16px; font-size:14px; font-weight:700; direction:rtl; font-family:Arial,sans-serif;">
+  ⚠️ נראה שהקובץ נפתח באפליקציה שאינה דפדפן.<br>
+  <span style="font-weight:400; font-size:13px;">לחצי על ··· או Share ← "פתח ב-Chrome" / "פתח ב-Safari"</span>
+</div>
+
+<div class="header">
+  <h1>מחשבון פרמיות</h1>
+  <p>חישוב פרמיית עבודה ופרמיית העדרות</p>
+  <div style="margin-top:14px; background:rgba(251,191,36,0.08); border:1px solid rgba(251,191,36,0.25); border-radius:10px; padding:10px 16px; max-width:560px; margin-left:auto; margin-right:auto;">
+    <div style="font-size:12px; color:#fbbf24; font-weight:700; margin-bottom:4px;">⚠️ כלי עזר בלבד — נבנה על ידי אליסון אלט</div>
+    <div style="font-size:11px; color:#fde68a; line-height:1.7;">הכלי הזה נבנה באופן עצמאי ועלולים להיות בו אי-דיוקים. יש לבדוק תמיד מול דף הפרמיות הרשמי שלך.<br>שמת לב לטעות? אשמח לדעת כדי לשפר 🙏</div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="grid">
+
+    <!-- LEFT: Inputs -->
+    <div>
+      <div class="section-title"><span>⚙️ הגדרות הסכם</span><div class="line"></div></div>
+
+      <div class="input-row" style="background:rgba(255,255,255,0.02); border-color:rgba(255,255,255,0.05);">
+        <label style="color:#64748b;">
+          <button class="tip-btn" data-tip="tarif">?</button>
+          תעריף (קבוע)
+        </label>
+        <span style="font-size:13px; color:#475569; font-family:monospace; font-weight:600;">₪40.49</span>
+        <input type="hidden" id="tarif" value="40.49">
+      </div>
+
+      <input type="hidden" id="takara" value="5400">
+      <div class="input-row" style="flex-direction: column; align-items: flex-start; gap: 10px;">
+        <div style="display:flex; align-items:center; gap:6px;">
+          <button class="tip-btn" data-tip="takara">?</button>
+          <span style="font-size:13px; color:#cbd5e1;">סוג עובדת</span>
+        </div>
+        <div style="display:flex; gap:8px; width:100%;">
+          <button id="btn-regular" onclick="setVetek(false)" style="flex:1; padding:10px 6px; border-radius:8px; font-family:'Heebo',sans-serif; font-size:13px; font-weight:700; cursor:pointer; background:rgba(37,99,235,0.8); border:2px solid #3b82f6; color:#fff;">עובדת רגילה<br><span style="font-size:11px; font-weight:400;">תקרה ₪5,400</span></button>
+          <button id="btn-vetek" onclick="setVetek(true)" style="flex:1; padding:10px 6px; border-radius:8px; font-family:'Heebo',sans-serif; font-size:13px; font-weight:700; cursor:pointer; background:rgba(255,255,255,0.05); border:2px solid rgba(255,255,255,0.1); color:#94a3b8;">ותיקה<br><span style="font-size:11px; font-weight:400;">תקרה ₪5,838.25</span></button>
+        </div>
+      </div>
+
+      <div class="input-row" style="background:rgba(255,255,255,0.02); border-color:rgba(255,255,255,0.05);">
+        <label style="color:#64748b;">
+          <button class="tip-btn" data-tip="makdam">?</button>
+          מקדם טיפולים (קבוע)
+        </label>
+        <span style="font-size:13px; color:#475569; font-family:monospace; font-weight:600;">×2</span>
+        <input type="hidden" id="makdam" value="2">
+      </div>
+
+      <div class="section-title"><span>⏱️ שעות עבודה</span><div class="line"></div></div>
+
+      <div class="input-row">
+        <label>
+          <button class="tip-btn" data-tip="shaPotential">?</button>
+          שעות פוטנציאליות
+        </label>
+        <span class="unit">שעות</span>
+        <input type="number" inputmode="decimal" id="shaPotential" value="" placeholder="0" step="0.5" oninput="calc()">
+      </div>
+
+      <div class="input-row">
+        <label>
+          <button class="tip-btn" data-tip="shaTeken">?</button>
+          שעות תקן (לפי משרתי)
+        </label>
+        <span class="unit">שעות</span>
+        <input type="number" inputmode="decimal" id="shaTeken" value="" placeholder="0" step="0.5" oninput="calc()">
+      </div>
+
+      <div class="section-title"><span>📅 היעדרויות</span><div class="line"></div></div>
+
+      <div class="input-row">
+        <label>
+          <button class="tip-btn" data-tip="headrutMazaka">?</button>
+          היעדרות מזכה
+        </label>
+        <span class="unit">שעות</span>
+        <input type="number" inputmode="decimal" id="headrutMazaka" value="" placeholder="0" step="0.5" oninput="calc()">
+      </div>
+
+      <div class="input-row">
+        <label>
+          <button class="tip-btn" data-tip="headrutLoMazaka">?</button>
+          היעדרות לא מזכה (מחלה)
+        </label>
+        <span class="unit">שעות</span>
+        <input type="number" inputmode="decimal" id="headrutLoMazaka" value="" placeholder="0" step="0.5" oninput="calc()">
+      </div>
+
+      <!-- Auto-calculated שעות עבודה -->
+      <div class="input-row" style="background:rgba(37,99,235,0.06); border-color:rgba(37,99,235,0.2);">
+        <label style="color:#93c5fd;">
+          <button class="tip-btn" data-tip="shaAvoda">?</button>
+          שעות עבודה (מחושב)
+        </label>
+        <span class="unit" style="color:#64748b;">שעות</span>
+        <span id="shaAvoda_display" style="width:80px; text-align:center; font-size:14px; font-weight:700; color:#3b82f6; font-family:monospace;">0.00</span>
+        <input type="hidden" id="shaAvoda" value="0">
+      </div>
+
+      <div class="section-title"><span>📊 תפוקות</span><div class="line"></div></div>
+
+      <div class="input-row">
+        <label>
+          <button class="tip-btn" data-tip="shaLaTipulit">?</button>
+          שעות שלט
+        </label>
+        <span class="unit">שעות</span>
+        <input type="number" inputmode="decimal" id="shaLaTipulit" value="" placeholder="0" step="0.5" oninput="calc()">
+      </div>
+
+      <div class="input-row">
+        <label>
+          <button class="tip-btn" data-tip="shaNosfot">?</button>
+          שעות נוספות
+        </label>
+        <span class="unit">שעות</span>
+        <input type="number" inputmode="decimal" id="shaNosfot" value="" placeholder="0" step="0.05" oninput="calc()">
+      </div>
+
+      <div class="input-row">
+        <label>
+          <button class="tip-btn" data-tip="tifukot">?</button>
+          כמות תפוקות
+        </label>
+        <span class="unit">תפוקות</span>
+        <input type="number" inputmode="decimal" id="tifukot" value="" placeholder="0" step="1" oninput="calc()">
+      </div>
+
+      <div class="input-row">
+        <label>
+          <button class="tip-btn" data-tip="avgShnati">?</button>
+          ממוצע שנתי (12 חודשים)
+        </label>
+        <span class="unit">ממוצע</span>
+        <input type="number" inputmode="decimal" id="avgShnati" value="" placeholder="0.00" step="0.01" min="0" max="1" oninput="calc()">
+      </div>
+
+      <!-- Reset Button -->
+      <button onclick="resetFields()" style="
+        margin-top: 16px; width: 100%; padding: 12px;
+        background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3);
+        border-radius: 8px; color: #fca5a5; font-size: 14px; font-weight: 600;
+        font-family: 'Heebo', 'Arial Hebrew', 'David', Arial, sans-serif; cursor: pointer; letter-spacing: 0.02em;
+      ">🔄 איפוס כל השדות</button>
+    </div>
+
+    <!-- RIGHT: Results -->
+    <div>
+      <div class="section-title"><span>🔢 ניתוח ביניים</span><div class="line"></div></div>
+
+      <div class="result-row">
+        <span class="rlabel">טיפולים משוקללים</span>
+        <span class="rvalue" id="r_tipulim">—</span>
+      </div>
+      <div class="result-row">
+        <span class="rlabel">מכנה (שעות מושקעות)</span>
+        <span class="rvalue" id="r_mecane">—</span>
+      </div>
+      <div class="result-row">
+        <span class="rlabel">ממוצע טיפולים לתשלום</span>
+        <span class="rvalue" id="r_avg">—</span>
+      </div>
+      <div class="result-row">
+        <span class="rlabel">סך שעות לתשלום</span>
+        <span class="rvalue" id="r_totalHours">—</span>
+      </div>
+
+      <div class="section-title"><span>🎯 משרה ותקרה</span><div class="line"></div></div>
+
+      <div class="result-row">
+        <span class="rlabel">אחוז משרה בפועל</span>
+        <span class="rvalue" id="r_mishra">—</span>
+      </div>
+      <div class="result-row accent">
+        <span class="rlabel">תקרת תשלום לחודש</span>
+        <span class="rvalue" id="r_takara">—</span>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Alert area -->
+      <div id="alertArea"></div>
+
+      <div class="section-title"><span>💰 פרמיות</span><div class="line"></div></div>
+
+      <div class="result-row">
+        <span class="rlabel">פרמיית עבודה (לפני תקרה)</span>
+        <span class="rvalue" id="r_avoda_before">—</span>
+      </div>
+      <div class="result-row accent">
+        <span class="rlabel">פרמיית עבודה סמל 1783</span>
+        <span class="rvalue" id="r_avoda">—</span>
+      </div>
+      <div class="divider"></div>
+      <div class="result-row">
+        <span class="rlabel">פרמיית העדרות (לפני תקרה)</span>
+        <span class="rvalue" id="r_headrut_before">—</span>
+      </div>
+      <div class="result-row accent">
+        <span class="rlabel">פרמיית העדרות סמל 1785</span>
+        <span class="rvalue" id="r_headrut">—</span>
+      </div>
+
+      <div class="total-box">
+        <div class="tlabel">סך תשלום פרמיה כפוף לתקרה</div>
+        <div class="tamount" id="r_total">₪0.00</div>
+        <div class="tsub" id="r_total_sub">—</div>
+      </div>
+      <div style="margin-top:8px; font-size:11px; color:#475569; text-align:center; line-height:1.6;">
+        ⚠️ כלי עזר בלבד — עשוי להיות מכוייל עד ~₪30 מהתלוש הרשמי
+      </div>
+
+      <!-- Progress toward תקרה -->
+      <div id="takaraProgress" style="margin-top:14px;"></div>
+
+      <!-- Suggestions -->
+      <div id="suggestArea" style="margin-top:10px;"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+function v(id) { return parseFloat(document.getElementById(id).value) || 0; }
+function set(id, val, unit) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = val + (unit ? ' ' + unit : '');
+}
+
+// ---- TOOLTIP DATA ----
+// All tooltip content lives here in JS — safe from HTML corruption during file transfer
+const TIPS = {
+  tarif:          'תעריף הסכם קבוע: 40.49 ₪ לשעה לטיפול. לא ניתן לשינוי.',
+  takara:         'עובדת רגילה: תקרה 5,400 ₪\nותיקה: תקרה 5,838.25 ₪',
+  makdam:         'בהתפתחות הילד ריפוי בעיסוק: כל תפוקה שווה ×2 טיפולים משוקללים. לא ניתן לשינוי.',
+  shaPotential:   'מקסימום שעות לחודש למשרה מלאה (100%):\n• יום רגיל (א-ה): 8 שעות\n• ערב חג: 4 שעות\n• חול המועד: 5 שעות\n• יום חג: 0 שעות\n• יום מקוצר (פורים/חנוכה/יום המשפחה): 8 שעות ✓\n\n⚠️ יום מקוצר — למרות הקיצור בפועל, נספר כיום עבודה מלא (8 שעות) לצורך חישוב שעות פוטנציאליות.\n\nמשמש לחישוב תקרת התשלום החודשית.',
+  shaTeken:       'חשבי לפי הימים שאת עובדת בשבוע וכמה פעמים כל יום מופיע בלוח השנה החודשי.\n\nלדוגמה: את עובדת א׳ (7 שעות), ד׳ (7 שעות), ה׳ (8 שעות)\nבחודש עם 5 ימי א׳, 5 ימי ד׳, 4 ימי ה׳:\n(7×5) + (7×5) + (8×4) = 102 שעות\n\n⚠️ שימי לב לימים מיוחדים לפי איזה יום שבוע הם נופלים:\n• ערב חג — 50% משעות היום הרגיל\n• חג — 0 שעות\n• חול המועד — 62.5% משעות היום הרגיל\n• יום בחירה — לא נכנס לתקן, מוכנס להיעדרות מזכה\n\n🔄 יום מקוצר (חנוכה/פורים וכד׳) — יתעדכן בהמשך',
+  headrutMazaka:  'היעדרויות המזכות בפרמיית העדרות:\n• חופש שנתי\n• יום בחירה\n• יום זיכרון – עובד שכול\n• השתלמות מתחת ל־3 ימים\n\nמופחתות משעות התקן בחישוב שעות העבודה, ומזכות בפרמיה נפרדת.\n\n⚠️ אם ההיעדרות חלה על יום מקוצר (ערב חג / חול המועד) — הכנס את השעות המקוצרות בפועל, לא את שעות היום המלא.',
+  headrutLoMazaka:'היעדרויות שאינן מזכות בפרמיית העדרות:\n• מחלת עובד\n• מחלת ילד\n• הצהרה\n• מחלת בן משפחה מכל סוג\n• עקב הריון, טיפולי פריה\n• תאונת עבודה\n• נישואים – של העובד או בן/בת\n• יום לידה בן/בת\n• ברית מילה\n• ימי אבל\n• השתלמות מעל 3 ימים\n• שביתה\n• ביקור אצל רופא תעסוקתי\n\nמופחתות משעות התקן בחישוב שעות העבודה.\n\n⚠️ אם ההיעדרות חלה על יום מקוצר (ערב חג / חול המועד) — הכנס את השעות המקוצרות בפועל, לא את שעות היום המלא.',
+  shaAvoda:       'שעות עבודה = שעות תקן − היעדרות מזכה − מחלה − שלט + שעות נוספות\n\nשעות אלו הן המכנה לחישוב ממוצע הטיפולים.\nשלט ושעות נוספות מוזנות בסעיף תפוקות.',
+  shaLaTipulit:   'שעות עבודה ללא קוד תפוקה ב-Clicks, שאושרו מראש על ידי המנהלת (נילי / מירב).\n\nלדוגמה:\n• מחקר\n• הכנת מסמכים\n• עבודה אדמיניסטרטיבית\n\n⚠️ שלט מופחת משעות העבודה ולא נכנס למכנה — פחות שלט = ממוצע גבוה יותר = פרמיה גבוהה יותר.',
+  shaNosfot:      'שעות מעבר לשעות התקן שלך, שמופיעות בדף הפרמיות.\nלרוב מדובר בדקות בודדות — לא משהו שמתכננים, פשוט מעתיקים מהדף.\n\nנכנסות למכנה ולסך שעות לתשלום.',
+  tifukot:        'קודי תפוקה ב-Clicks:\n• 50011 - טיפול\n• 50008 - אבחון\n• 50016 - ישיבה\n• 50038 - דוח\n• 50042 - ישיבה עם גננת\n\nכל קוד = תפוקה אחת.',
+  avgShnati:      'ממוצע הטיפולים לתשלום של 12 החודשים הקודמים.\nמשמש לחישוב פרמיית ההעדרות.\nהכנס ידנית מהתלוש החודשי.',
+  shalet:         'כשמעבירים שעות עבודה לשלט:\n• המכנה קטן ← ממוצע עולה\n• סך שעות לתשלום לא משתנה\n• התקרה לא משתנה\n\nלכן הפרמיה עולה בלי לשנות את התקרה!\n\nמגבלה: שלט ≤ שעות עבודה (כלל 50%)'
+};
+
+// Build tooltip popup element once, reuse it
+const tipPopup = document.createElement('div');
+Object.assign(tipPopup.style, {
+  position: 'fixed',
+  zIndex: '9999',
+  width: '240px',
+  display: 'none',
+  background: '#1e293b',
+  color: '#e2e8f0',
+  borderRadius: '8px',
+  padding: '10px 14px',
+  fontSize: '12px',
+  lineHeight: '1.7',
+  whiteSpace: 'pre-line',
+  textAlign: 'right',
+  border: '1px solid rgba(255,255,255,0.1)',
+  boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
+  pointerEvents: 'none',
+  direction: 'rtl',
+  fontFamily: "Heebo, 'Arial Hebrew', Arial, sans-serif"
+});
+document.body.appendChild(tipPopup);
+
+let activeTipBtn = null;
+
+function showTip(btn) {
+  const key = btn.getAttribute('data-tip');
+  if (!key || !TIPS[key]) return;
+  if (activeTipBtn === btn) { hideTip(); return; }
+  hideTip();
+  activeTipBtn = btn;
+  btn.classList.add('open');
+  tipPopup.textContent = TIPS[key];
+  // Show offscreen first to measure height
+  tipPopup.style.visibility = 'hidden';
+  tipPopup.style.display = 'block';
+  const popupWidth = 240;
+  const popupHeight = tipPopup.offsetHeight;
+  const rect = btn.getBoundingClientRect();
+  // Horizontal: align right edge of popup with right edge of button, clamp to viewport
+  let left = rect.right - popupWidth;
+  if (left < 8) left = 8;
+  if (left + popupWidth > window.innerWidth - 8) left = window.innerWidth - popupWidth - 8;
+  // Vertical: above button, flip below if not enough space
+  let top = rect.top - popupHeight - 8;
+  if (top < 8) top = rect.bottom + 8;
+  tipPopup.style.left = left + 'px';
+  tipPopup.style.top = top + 'px';
+  tipPopup.style.visibility = 'visible';
+}
+
+function hideTip() {
+  if (activeTipBtn) { activeTipBtn.classList.remove('open'); activeTipBtn = null; }
+  tipPopup.style.display = 'none';
+}
+
+// Wire up all tip buttons via hover (event delegation)
+document.addEventListener('mouseover', function(e) {
+  const btn = e.target.closest('[data-tip]');
+  if (btn) showTip(btn);
+});
+document.addEventListener('mouseout', function(e) {
+  const btn = e.target.closest('[data-tip]');
+  if (btn) hideTip();
+});
+
+// Touch support for mobile
+document.addEventListener('touchstart', function(e) {
+  const btn = e.target.closest('[data-tip]');
+  if (btn) {
+    e.preventDefault();
+    if (activeTipBtn === btn) { hideTip(); return; }
+    showTip(btn);
+  } else {
+    hideTip();
+  }
+}, { passive: false });
+
+
+// Detect if running in a limited viewer (no proper window.location, sandboxed webview, etc.)
+(function() {
+  try {
+    // HTML viewer apps often have no real navigation or are file:// with restrictions
+    // A simple heuristic: if localStorage throws or UA looks like a webview
+    const ua = navigator.userAgent || '';
+    const isWebView = /; wv\)/.test(ua); // Android WebView flag
+    if (isWebView) {
+      document.getElementById('wrong-app-banner').style.display = 'block';
+    }
+  } catch(e) {
+    document.getElementById('wrong-app-banner').style.display = 'block';
+  }
+})();
+
+function calc() {
+  const tarif = v('tarif');
+  const takara = v('takara');
+  const makdam = v('makdam');
+  const shaPotential = v('shaPotential');
+  const shaLaTipulit = v('shaLaTipulit');
+  const shaTeken = v('shaTeken');
+  const headrutMazaka = v('headrutMazaka');
+  const headrutLoMazaka_val = v('headrutLoMazaka');
+  const shaNosfot = v('shaNosfot');
+  const shaAvoda = Math.max(0, shaTeken - headrutMazaka - headrutLoMazaka_val - shaLaTipulit + shaNosfot);
+  // Update hidden field and display
+  document.getElementById('shaAvoda').value = shaAvoda;
+  document.getElementById('shaAvoda_display').textContent = shaAvoda.toFixed(2);
+  const tifukot = v('tifukot');
+  const avgShnati = v('avgShnati');
+
+  // Core calcs
+  const tipulimMushkalim = tifukot * makdam;
+  const mecane = shaAvoda;
+  const rawAvg = mecane > 0 ? tipulimMushkalim / mecane : 0;
+  const avgTipulim = Math.min(Math.max(rawAvg - 1, 0), 1);
+  const totalHoursLeTashlum = Math.max(0, shaTeken - headrutMazaka - headrutLoMazaka_val + shaNosfot);
+
+  // Threshold check: coded hours / total clocked hours >= 50%
+  // Threshold: coded hours / actual hours present (excluding absences entirely)
+  const actualHoursPresent = shaAvoda + shaLaTipulit; // עבודה + שלט (both = hours you were there)
+  const codedPct = actualHoursPresent > 0 ? shaAvoda / actualHoursPresent : 0;
+  const belowThreshold = codedPct < 0.5;
+
+  // אחוז משרה בפועל
+  const mishraHours = Math.max(0, shaTeken - headrutLoMazaka_val + shaNosfot);
+  const mishraPct = shaPotential > 0 ? mishraHours / shaPotential : 0;
+  const takaraHodesh = mishraPct * takara;
+
+  // Gate: nothing pays if monthly avg <= 0 (rawAvg must exceed 1) OR below 50% threshold
+  const belowAvgGate = avgTipulim <= 0;
+  const noPayment = belowThreshold || belowAvgGate;
+
+  // פרמיית עבודה
+  const premiatAvodaBefore = noPayment ? 0 : totalHoursLeTashlum * avgTipulim * tarif;
+  const premiatAvoda = Math.min(premiatAvodaBefore, takaraHodesh);
+
+  // פרמיית העדרות
+  const premiatHeadrutBefore = noPayment ? 0 : headrutMazaka * avgShnati * tarif;
+  const remainingCap = Math.max(0, takaraHodesh - premiatAvoda);
+  const premiatHeadrut = Math.min(premiatHeadrutBefore, remainingCap);
+
+  const total = premiatAvoda + premiatHeadrut;
+
+  // To reach avg = 1 after subtracting 1, need raw avg = 2, so tipulim = mecane * 2
+  const tifukotNeeded = mecane > 0 ? Math.ceil((mecane * 2) / makdam) : 0;
+  const shortfall = Math.max(0, tifukotNeeded - tifukot);
+
+  // Update UI
+  set('r_tipulim', tipulimMushkalim.toFixed(0), 'טיפולים');
+  set('r_mecane', mecane.toFixed(2), 'שעות');
+  set('r_avg', avgTipulim.toFixed(3), avgTipulim >= 1 ? '(מקסימום ✓)' : '');
+  set('r_totalHours', totalHoursLeTashlum.toFixed(2), 'שעות');
+  set('r_mishra', (mishraPct * 100).toFixed(1), '%');
+  set('r_takara', '₪' + takaraHodesh.toFixed(2));
+  set('r_avoda_before', '₪' + premiatAvodaBefore.toFixed(2));
+  set('r_avoda', '₪' + premiatAvoda.toFixed(2));
+  set('r_headrut_before', '₪' + premiatHeadrutBefore.toFixed(2));
+  set('r_headrut', '₪' + premiatHeadrut.toFixed(2));
+  document.getElementById('r_total').textContent = '₪' + total.toFixed(2);
+  document.getElementById('r_total_sub').textContent = 'סמל 1783: ₪' + premiatAvoda.toFixed(2) + ' | סמל 1785: ₪' + premiatHeadrut.toFixed(2);
+
+  // ---- PROGRESS TOWARD תקרה ----
+  const gapToTakara = takaraHodesh - total;
+  const progressPct = takaraHodesh > 0 ? Math.min(total / takaraHodesh * 100, 100) : 0;
+  const atOrOverCap = total >= takaraHodesh - 0.5;
+
+  const progressColor = progressPct >= 100 ? '#22c55e' : progressPct >= 75 ? '#3b82f6' : progressPct >= 40 ? '#fbbf24' : '#ef4444';
+
+  document.getElementById('takaraProgress').innerHTML = `
+    <div style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:12px 14px;">
+      <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+        <span style="font-size:12px; color:#94a3b8;">התקדמות לתקרה</span>
+        <span style="font-size:12px; font-weight:700; color:${progressColor};">${progressPct.toFixed(1)}%</span>
+      </div>
+      <div style="background:rgba(255,255,255,0.07); border-radius:99px; height:10px; overflow:hidden;">
+        <div style="width:${progressPct}%; height:100%; background:${progressColor}; border-radius:99px; transition:width 0.4s;"></div>
+      </div>
+      <div style="display:flex; justify-content:space-between; margin-top:7px;">
+        <span style="font-size:11px; color:#64748b;">פרמיה: ₪${total.toFixed(2)}</span>
+        <span style="font-size:11px; color:#64748b;">תקרה: ₪${takaraHodesh.toFixed(2)}</span>
+      </div>
+      ${atOrOverCap ? '' : `<div style="margin-top:6px; font-size:12px; color:#fbbf24; text-align:center;">חסר: ₪${gapToTakara.toFixed(2)}</div>`}
+    </div>`;
+
+  // ---- THRESHOLD + SUGGESTIONS ----
+  const alertArea = document.getElementById('alertArea');
+  const suggestArea = document.getElementById('suggestArea');
+
+  if (belowThreshold) {
+    alertArea.innerHTML = `<div class="alert danger">
+      <div class="atitle">⚠️ סף תפוקתי לא הושג</div>
+      <div class="abody">שעות תפוקתיות: ${(codedPct*100).toFixed(1)}% משעות הנוכחות בפועל<br>נדרש לפחות 50% משעות הנוכחות (לא כולל היעדרויות) עם קוד ב-Clicks לקבלת פרמיה.</div>
+    </div>`;
+    suggestArea.innerHTML = '';
+  } else if (belowAvgGate) {
+    alertArea.innerHTML = `<div class="alert danger">
+      <div class="atitle">⚠️ שעות עבודה לא מספיק תפוקתיות</div>
+      <div class="abody">לפחות מחצית משעות העבודה שלך צריכות להיות תפוקתיות כדי לקבל פרמיה כלשהי — כולל פרמיית העדרות.</div>
+    </div>`;
+    suggestArea.innerHTML = '';
+  } else if (atOrOverCap) {
+    alertArea.innerHTML = `<div class="alert success">
+      <div class="atitle">🎉 הגעת לתקרה!</div>
+      <div class="abody">פרמיה מקסימלית לחודש זה הושגה.</div>
+    </div>`;
+    suggestArea.innerHTML = '';
+  } else {
+    // Build suggestions
+    let suggestions = '';
+
+    // Option A: more תפוקות (only if avg < 1)
+    if (avgTipulim < 1) {
+      // How many more תפוקות needed to close the gap?
+      // gap = takaraHodesh - total = takaraHodesh - (totalHoursLeTashlum * avgTipulim * tarif) - premiatHeadrut
+      // We need: totalHoursLeTashlum * newAvg * tarif + premiatHeadrut >= takaraHodesh
+      // newAvg = (takaraHodesh - premiatHeadrut) / (totalHoursLeTashlum * tarif)
+      const neededAvg = totalHoursLeTashlum > 0 && tarif > 0
+        ? (takaraHodesh - premiatHeadrutBefore) / (totalHoursLeTashlum * tarif)
+        : 0;
+      const cappedNeededAvg = Math.min(neededAvg, 1);
+      // rawAvg needed = neededAvg + 1
+      const neededRawAvg = cappedNeededAvg + 1;
+      const neededTipulim = Math.ceil(neededRawAvg * mecane);
+      const extraTifukot = Math.max(0, Math.ceil((neededTipulim - tipulimMushkalim) / makdam));
+
+      if (extraTifukot > 0) {
+        suggestions += `<div class="alert warning" style="margin-bottom:8px;">
+          <div class="atitle">📋 אפשרות א׳: עוד תפוקות</div>
+          <div class="abody">הוסיפי <strong>${extraTifukot} תפוקות</strong> נוספות ב-Clicks כדי לסגור פער של ₪${gapToTakara.toFixed(2)}<br>
+          <span style="font-size:11px; opacity:0.8;">כרגע: ${tifukot} תפוקות | נדרש: ${tifukot + extraTifukot}</span></div>
+        </div>`;
+      }
+    }
+
+    // --- OPTION B: convert עבודה hours to שלט ---
+    // Moving hours from עבודה to שלט:
+    // - מכנה shrinks → ממוצע rises (same תפוקות, fewer denominator hours)
+    // - סך שעות לתשלום stays SAME (total clocked hours unchanged)
+    // - Ceiling stays SAME (total clocked hours unchanged)
+    // Constraint: שלט ≤ שעות עבודה (50% rule)
+    const availableShalet = Math.max(0, shaAvoda);  // shaAvoda already excludes שלט
+
+    if (availableShalet > 0.1 && avgTipulim < 1) {
+      // Find how much שלט needed to hit תקרה via numerical search
+      const targetPremium = Math.max(0, takaraHodesh - premiatHeadrutBefore);
+      let shaletNeeded = null;
+      for (let x = 0.5; x <= availableShalet + 0.5; x += 0.5) {
+        const newMecane = Math.max(mecane - x, 0.01);
+        const newAvg = Math.min(Math.max(tipulimMushkalim / newMecane - 1, 0), 1);
+        const newPremium = totalHoursLeTashlum * newAvg * tarif;
+        if (newPremium >= targetPremium) {
+          shaletNeeded = x;
+          break;
+        }
+      }
+
+      if (shaletNeeded !== null) {
+        suggestions += `<div class="alert warning">
+          <div class="atitle">🕐 אפשרות ב׳: העבר שעות לשלט
+            <button class="tip-btn" data-tip="shalet" style="font-size:9px; width:15px; height:15px; margin-right:6px;">?</button>
+          </div>
+          <div class="abody">העבירי <strong>${shaletNeeded.toFixed(1)} שעות</strong> משעות עבודה לשלט<br>
+          <span style="font-size:11px; opacity:0.8;">שלט: ${shaLaTipulit} → ${(shaLaTipulit + shaletNeeded).toFixed(1)} | מקסימום אפשרי: ${shaAvoda.toFixed(1)}</span></div>
+        </div>`;
+      } else {
+        suggestions += `<div class="alert warning">
+          <div class="atitle">🕐 אפשרות ב׳: העבר שעות לשלט
+            <button class="tip-btn" data-tip="shalet" style="font-size:9px; width:15px; height:15px; margin-right:6px;">?</button>
+          </div>
+          <div class="abody">העבירי את כל <strong>${availableShalet.toFixed(1)} שעות</strong> הזמינות לשלט — יקרב לתקרה אך לא יספיק לבד<br>
+          <span style="font-size:11px; opacity:0.8;">שלט: ${shaLaTipulit} → ${(shaLaTipulit + availableShalet).toFixed(1)} | מקסימום: ${shaAvoda.toFixed(1)}</span></div>
+        </div>`;
+      }
+    }
+
+    if (!suggestions) {
+      suggestions = `<div class="alert warning">
+        <div class="atitle">💡 ממוצע מקסימלי — צריך עוד שעות</div>
+        <div class="abody">הממוצע כבר 1.0 ואין שלט נוסף זמין. כדי להגיע לתקרה — צריך עוד שעות עבודה בחודש זה.</div>
+      </div>`;
+    }
+
+    alertArea.innerHTML = '';
+    suggestArea.innerHTML = `<div style="font-size:11px; font-weight:700; color:#475569; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:8px;">💡 הצעות להגדלת הפרמיה</div>` + suggestions;
+  }
+}
+
+function setVetek(isVetek) {
+  document.getElementById('takara').value = isVetek ? 5838.25 : 5400;
+  document.getElementById('btn-regular').style.background = isVetek ? 'rgba(255,255,255,0.05)' : 'rgba(37,99,235,0.8)';
+  document.getElementById('btn-regular').style.border = isVetek ? '2px solid rgba(255,255,255,0.1)' : '2px solid #3b82f6';
+  document.getElementById('btn-regular').style.color = isVetek ? '#94a3b8' : '#fff';
+  document.getElementById('btn-vetek').style.background = isVetek ? 'rgba(37,99,235,0.8)' : 'rgba(255,255,255,0.05)';
+  document.getElementById('btn-vetek').style.border = isVetek ? '2px solid #3b82f6' : '2px solid rgba(255,255,255,0.1)';
+  document.getElementById('btn-vetek').style.color = isVetek ? '#fff' : '#94a3b8';
+  calc();
+}
+
+function resetFields() {
+  ['shaPotential','shaTeken','shaNosfot','shaLaTipulit','headrutMazaka','headrutLoMazaka','tifukot','avgShnati'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  calc();
+}
+
+// Run on load
+calc();
+</script>
+</body>
+</html>
