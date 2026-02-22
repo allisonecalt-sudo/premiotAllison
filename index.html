@@ -134,6 +134,7 @@
 </div>
 
 <div class="header">
+  <div class="sub">כללית | ריפוי בעיסוק | התפתחות הילד | ירושלים</div>
   <h1>מחשבון פרמיות</h1>
   <p>חישוב פרמיית עבודה ופרמיית העדרות</p>
   <div style="margin-top:14px; background:rgba(251,191,36,0.08); border:1px solid rgba(251,191,36,0.25); border-radius:10px; padding:10px 16px; max-width:560px; margin-left:auto; margin-right:auto;">
@@ -268,13 +269,27 @@
         <input type="number" inputmode="decimal" id="avgShnati" value="" placeholder="0.00" step="0.01" min="0" max="1" oninput="calc()">
       </div>
 
-      <!-- Reset Button -->
-      <button onclick="resetFields()" style="
-        margin-top: 16px; width: 100%; padding: 12px;
-        background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3);
-        border-radius: 8px; color: #fca5a5; font-size: 14px; font-weight: 600;
-        font-family: 'Heebo', 'Arial Hebrew', 'David', Arial, sans-serif; cursor: pointer; letter-spacing: 0.02em;
-      ">🔄 איפוס כל השדות</button>
+      <!-- Reset + Copy Buttons -->
+      <div style="display:flex; gap:8px; margin-top:16px;">
+        <button onclick="resetFields()" style="
+          flex:1; padding:12px;
+          background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3);
+          border-radius: 8px; color: #fca5a5; font-size: 13px; font-weight: 600;
+          font-family: 'Heebo', 'Arial Hebrew', 'David', Arial, sans-serif; cursor: pointer;
+        ">🔄 איפוס</button>
+        <button onclick="downloadPDF()" style="
+          flex:1; padding:12px;
+          background: rgba(37,99,235,0.15); border: 1px solid rgba(37,99,235,0.4);
+          border-radius: 8px; color: #93c5fd; font-size: 13px; font-weight: 600;
+          font-family: 'Heebo', 'Arial Hebrew', 'David', Arial, sans-serif; cursor: pointer;
+        ">📄 שמור PDF</button>
+        <button onclick="downloadExcel()" style="
+          flex:1; padding:12px;
+          background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3);
+          border-radius: 8px; color: #86efac; font-size: 13px; font-weight: 600;
+          font-family: 'Heebo', 'Arial Hebrew', 'David', Arial, sans-serif; cursor: pointer;
+        ">📊 שמור Excel</button>
+      </div>
     </div>
 
     <!-- RIGHT: Results -->
@@ -364,14 +379,14 @@ function set(id, val, unit) {
 // All tooltip content lives here in JS — safe from HTML corruption during file transfer
 const TIPS = {
   tarif:          'תעריף הסכם קבוע: 40.49 ₪ לשעה לטיפול. לא ניתן לשינוי.',
-  takara:         'עובדת רגילה: תקרה 5,400 ₪\nותיקה: תקרה 5,838.25 ₪',
+  takara:         'התקרה המוצגת היא למשרה מלאה (100%):\n• עובדת רגילה: ₪5,400\n• ותיקה: ₪5,838.25\n\nהתקרה בפועל שלך מחושבת לפי אחוז המשרה החודשי:\nתקרה בפועל = (שעות תקן ÷ שעות פוטנציאליות) × תקרה מלאה\n\nלדוגמה: שעות תקן 80 מתוך 160 פוטנציאליות = 50% משרה → תקרה של ₪2,700',
   makdam:         'בהתפתחות הילד ריפוי בעיסוק: כל תפוקה שווה ×2 טיפולים משוקללים. לא ניתן לשינוי.',
   shaPotential:   'מקסימום שעות לחודש למשרה מלאה (100%):\n• יום רגיל (א-ה): 8 שעות\n• ערב חג: 4 שעות\n• חול המועד: 5 שעות\n• יום חג: 0 שעות\n• יום מקוצר (פורים/חנוכה/יום המשפחה): 8 שעות ✓\n\n⚠️ יום מקוצר — למרות הקיצור בפועל, נספר כיום עבודה מלא (8 שעות) לצורך חישוב שעות פוטנציאליות.\n\nמשמש לחישוב תקרת התשלום החודשית.',
   shaTeken:       'חשבי לפי הימים שאת עובדת בשבוע וכמה פעמים כל יום מופיע בלוח השנה החודשי.\n\nלדוגמה: את עובדת א׳ (7 שעות), ד׳ (7 שעות), ה׳ (8 שעות)\nבחודש עם 5 ימי א׳, 5 ימי ד׳, 4 ימי ה׳:\n(7×5) + (7×5) + (8×4) = 102 שעות\n\n⚠️ שימי לב לימים מיוחדים לפי איזה יום שבוע הם נופלים:\n• ערב חג — 50% משעות היום הרגיל\n• חג — 0 שעות\n• חול המועד — 62.5% משעות היום הרגיל\n• יום בחירה — לא נכנס לתקן, מוכנס להיעדרות מזכה\n\n🔄 יום מקוצר (חנוכה/פורים וכד׳) — יתעדכן בהמשך',
   headrutMazaka:  'היעדרויות המזכות בפרמיית העדרות:\n• חופש שנתי\n• יום בחירה\n• יום זיכרון – עובד שכול\n• השתלמות מתחת ל־3 ימים\n\nמופחתות משעות התקן בחישוב שעות העבודה, ומזכות בפרמיה נפרדת.\n\n⚠️ אם ההיעדרות חלה על יום מקוצר (ערב חג / חול המועד) — הכנס את השעות המקוצרות בפועל, לא את שעות היום המלא.',
   headrutLoMazaka:'היעדרויות שאינן מזכות בפרמיית העדרות:\n• מחלת עובד\n• מחלת ילד\n• הצהרה\n• מחלת בן משפחה מכל סוג\n• עקב הריון, טיפולי פריה\n• תאונת עבודה\n• נישואים – של העובד או בן/בת\n• יום לידה בן/בת\n• ברית מילה\n• ימי אבל\n• השתלמות מעל 3 ימים\n• שביתה\n• ביקור אצל רופא תעסוקתי\n\nמופחתות משעות התקן בחישוב שעות העבודה.\n\n⚠️ אם ההיעדרות חלה על יום מקוצר (ערב חג / חול המועד) — הכנס את השעות המקוצרות בפועל, לא את שעות היום המלא.',
   shaAvoda:       'שעות עבודה = שעות תקן − היעדרות מזכה − מחלה − שלט + שעות נוספות\n\nשעות אלו הן המכנה לחישוב ממוצע הטיפולים.\nשלט ושעות נוספות מוזנות בסעיף תפוקות.',
-  shaLaTipulit:   'שעות עבודה ללא קוד תפוקה ב-Clicks, שאושרו מראש על ידי המנהלת (נילי / מירב).\n\nלדוגמה:\n• מחקר\n• הכנת מסמכים\n• עבודה אדמיניסטרטיבית\n\n⚠️ שלט מופחת משעות העבודה ולא נכנס למכנה — פחות שלט = ממוצע גבוה יותר = פרמיה גבוהה יותר.',
+  shaLaTipulit:   'שעות לא טיפוליות, המאושרות על ידי מנהלת המכון/ נילי/ מרב.\n\n⚠️ שלט מופחת משעות העבודה ולא נכנס למכנה — פחות שלט = ממוצע גבוה יותר = פרמיה גבוהה יותר.',
   shaNosfot:      'שעות מעבר לשעות התקן שלך, שמופיעות בדף הפרמיות.\nלרוב מדובר בדקות בודדות — לא משהו שמתכננים, פשוט מעתיקים מהדף.\n\nנכנסות למכנה ולסך שעות לתשלום.',
   tifukot:        'קודי תפוקה ב-Clicks:\n• 50011 - טיפול\n• 50008 - אבחון\n• 50016 - ישיבה\n• 50038 - דוח\n• 50042 - ישיבה עם גננת\n\nכל קוד = תפוקה אחת.',
   avgShnati:      'ממוצע הטיפולים לתשלום של 12 החודשים הקודמים.\nמשמש לחישוב פרמיית ההעדרות.\nהכנס ידנית מהתלוש החודשי.',
@@ -471,6 +486,35 @@ document.addEventListener('touchstart', function(e) {
     document.getElementById('wrong-app-banner').style.display = 'block';
   }
 })();
+
+// ---- LOCAL STORAGE: auto-save & restore ----
+const SAVE_FIELDS = ['shaPotential','shaTeken','shaNosfot','shaLaTipulit','headrutMazaka','headrutLoMazaka','tifukot','avgShnati','takara'];
+
+function saveToStorage() {
+  try {
+    const data = {};
+    SAVE_FIELDS.forEach(id => { data[id] = document.getElementById(id).value; });
+    // Save vetek state based on takara value
+    data.isVetek = document.getElementById('takara').value == 5838.25 ? '1' : '0';
+    localStorage.setItem('premiot_data', JSON.stringify(data));
+  } catch(e) {}
+}
+
+function loadFromStorage() {
+  try {
+    const raw = localStorage.getItem('premiot_data');
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    SAVE_FIELDS.forEach(id => {
+      if (data[id] !== undefined && data[id] !== '') {
+        document.getElementById(id).value = data[id];
+      }
+    });
+    // Restore vetek button state
+    if (data.isVetek === '1') setVetek(true);
+  } catch(e) {}
+}
+
 
 function calc() {
   const tarif = v('tarif');
@@ -664,6 +708,9 @@ function calc() {
     alertArea.innerHTML = '';
     suggestArea.innerHTML = `<div style="font-size:11px; font-weight:700; color:#475569; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:8px;">💡 הצעות להגדלת הפרמיה</div>` + suggestions;
   }
+
+  // Auto-save inputs to localStorage
+  saveToStorage();
 }
 
 function setVetek(isVetek) {
@@ -681,10 +728,159 @@ function resetFields() {
   ['shaPotential','shaTeken','shaNosfot','shaLaTipulit','headrutMazaka','headrutLoMazaka','tifukot','avgShnati'].forEach(id => {
     document.getElementById(id).value = '';
   });
+  try { localStorage.removeItem('premiot_data'); } catch(e) {}
   calc();
 }
 
-// Run on load
+function getSummaryData() {
+  const val = id => document.getElementById(id)?.value || '0';
+  const get = id => document.getElementById(id)?.textContent?.trim() || '—';
+  const isVetek = parseFloat(val('takara')) === 5838.25;
+  const now = new Date();
+  const monthNames = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
+  return {
+    month: monthNames[now.getMonth()] + ' ' + now.getFullYear(),
+    isVetek,
+    shaPotential: val('shaPotential'),
+    shaTeken: val('shaTeken'),
+    shaLaTipulit: val('shaLaTipulit') || '0',
+    shaNosfot: val('shaNosfot') || '0',
+    shaAvoda: get('shaAvoda_display'),
+    headrutMazaka: val('headrutMazaka') || '0',
+    headrutLoMazaka: val('headrutLoMazaka') || '0',
+    tifukot: val('tifukot') || '0',
+    avgShnati: val('avgShnati') || '0',
+    r_mishra: get('r_mishra'),
+    r_takara: get('r_takara'),
+    r_avg: get('r_avg'),
+    r_tipulim: get('r_tipulim'),
+    r_totalHours: get('r_totalHours'),
+    r_avoda_before: get('r_avoda_before'),
+    r_avoda: get('r_avoda'),
+    r_headrut_before: get('r_headrut_before'),
+    r_headrut: get('r_headrut'),
+    r_total: document.getElementById('r_total')?.textContent?.trim() || '—',
+  };
+}
+
+function downloadPDF() {
+  const d = getSummaryData();
+  const html = `<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+<meta charset="UTF-8">
+<title>פרמיה ${d.month}</title>
+<style>
+  body { font-family: Arial, sans-serif; direction: rtl; padding: 32px; color: #1e293b; max-width: 600px; margin: 0 auto; }
+  h1 { font-size: 22px; margin-bottom: 4px; }
+  .sub { font-size: 12px; color: #64748b; margin-bottom: 24px; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+  th { background: #1e3a5f; color: white; padding: 8px 12px; font-size: 13px; text-align: right; }
+  td { padding: 7px 12px; font-size: 13px; border-bottom: 1px solid #e2e8f0; text-align: right; }
+  tr:nth-child(even) td { background: #f8fafc; }
+  .accent td { background: #dbeafe !important; font-weight: 700; }
+  .total td { background: #1e3a5f !important; color: white; font-size: 16px; font-weight: 800; padding: 12px; }
+  .warning { font-size: 11px; color: #94a3b8; margin-top: 24px; border-top: 1px solid #e2e8f0; padding-top: 12px; }
+</style>
+</head>
+<body>
+<h1>מחשבון פרמיות — ${d.month}</h1>
+<div class="sub">כללית | ריפוי בעיסוק | התפתחות הילד | ירושלים &nbsp;|&nbsp; סוג עובדת: ${d.isVetek ? 'ותיקה' : 'רגילה'}</div>
+<table>
+  <tr><th colspan="2">⏱️ שעות עבודה</th></tr>
+  <tr><td>שעות פוטנציאליות</td><td>${d.shaPotential}</td></tr>
+  <tr><td>שעות תקן</td><td>${d.shaTeken}</td></tr>
+  <tr><td>שעות שלט</td><td>${d.shaLaTipulit}</td></tr>
+  <tr><td>שעות נוספות</td><td>${d.shaNosfot}</td></tr>
+  <tr class="accent"><td>שעות עבודה (מחושב)</td><td>${d.shaAvoda}</td></tr>
+</table>
+<table>
+  <tr><th colspan="2">📅 היעדרויות</th></tr>
+  <tr><td>היעדרות מזכה</td><td>${d.headrutMazaka} שעות</td></tr>
+  <tr><td>היעדרות לא מזכה (מחלה)</td><td>${d.headrutLoMazaka} שעות</td></tr>
+</table>
+<table>
+  <tr><th colspan="2">📊 תפוקות</th></tr>
+  <tr><td>כמות תפוקות</td><td>${d.tifukot}</td></tr>
+  <tr><td>ממוצע שנתי (12 חודשים)</td><td>${d.avgShnati}</td></tr>
+  <tr><td>טיפולים משוקללים</td><td>${d.r_tipulim}</td></tr>
+  <tr class="accent"><td>ממוצע טיפולים לתשלום</td><td>${d.r_avg}</td></tr>
+  <tr><td>סך שעות לתשלום</td><td>${d.r_totalHours}</td></tr>
+</table>
+<table>
+  <tr><th colspan="2">🎯 משרה ותקרה</th></tr>
+  <tr><td>אחוז משרה בפועל</td><td>${d.r_mishra}%</td></tr>
+  <tr class="accent"><td>תקרת תשלום חודשית</td><td>${d.r_takara}</td></tr>
+</table>
+<table>
+  <tr><th colspan="2">💰 פרמיות</th></tr>
+  <tr><td>פרמיית עבודה לפני תקרה</td><td>${d.r_avoda_before}</td></tr>
+  <tr class="accent"><td>פרמיית עבודה — סמל 1783</td><td>${d.r_avoda}</td></tr>
+  <tr><td>פרמיית העדרות לפני תקרה</td><td>${d.r_headrut_before}</td></tr>
+  <tr class="accent"><td>פרמיית העדרות — סמל 1785</td><td>${d.r_headrut}</td></tr>
+  <tr class="total"><td>סך פרמיה</td><td>${d.r_total}</td></tr>
+</table>
+<div class="warning">⚠️ כלי עזר בלבד — נבנה על ידי אליסון אלט. עשוי להיות מכוייל עד ~₪30 מהתלוש הרשמי.</div>
+</body></html>`;
+  const win = window.open('', '_blank');
+  if (!win) { alert('יש לאפשר חלונות קופצים בדפדפן כדי לשמור PDF'); return; }
+  win.document.write(html);
+  win.document.close();
+  win.focus();
+  setTimeout(() => { win.print(); }, 600);
+}
+
+function downloadExcel() {
+  const d = getSummaryData();
+  const rows = [
+    ['מחשבון פרמיות — ' + d.month, ''],
+    ['כללית | ריפוי בעיסוק | התפתחות הילד | ירושלים', ''],
+    ['סוג עובדת', d.isVetek ? 'ותיקה' : 'רגילה'],
+    ['', ''],
+    ['שעות עבודה', ''],
+    ['שעות פוטנציאליות', d.shaPotential],
+    ['שעות תקן', d.shaTeken],
+    ['שעות שלט', d.shaLaTipulit],
+    ['שעות נוספות', d.shaNosfot],
+    ['שעות עבודה (מחושב)', d.shaAvoda],
+    ['', ''],
+    ['היעדרויות', ''],
+    ['היעדרות מזכה (שעות)', d.headrutMazaka],
+    ['היעדרות לא מזכה - מחלה (שעות)', d.headrutLoMazaka],
+    ['', ''],
+    ['תפוקות', ''],
+    ['כמות תפוקות', d.tifukot],
+    ['ממוצע שנתי (12 חודשים)', d.avgShnati],
+    ['טיפולים משוקללים', d.r_tipulim],
+    ['ממוצע טיפולים לתשלום', d.r_avg],
+    ['סך שעות לתשלום', d.r_totalHours],
+    ['', ''],
+    ['משרה ותקרה', ''],
+    ['אחוז משרה בפועל', d.r_mishra + '%'],
+    ['תקרת תשלום חודשית', d.r_takara],
+    ['', ''],
+    ['פרמיות', ''],
+    ['פרמיית עבודה לפני תקרה', d.r_avoda_before],
+    ['פרמיית עבודה סמל 1783', d.r_avoda],
+    ['פרמיית העדרות לפני תקרה', d.r_headrut_before],
+    ['פרמיית העדרות סמל 1785', d.r_headrut],
+    ['סך פרמיה', d.r_total],
+    ['', ''],
+    ['הערה', 'כלי עזר בלבד — עשוי להיות מכוייל עד ~₪30 מהתלוש הרשמי'],
+  ];
+  const csv = '\uFEFF' + rows.map(r => r.map(c => '"' + String(c).replace(/"/g,'""') + '"').join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'פרמיה_' + d.month.replace(' ','_') + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+loadFromStorage();
 calc();
 </script>
 </body>
