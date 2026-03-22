@@ -143,6 +143,67 @@
   </div>
 </div>
 
+<!-- Tab Navigation -->
+<div style="max-width:720px; margin:0 auto; padding:16px 14px 0;">
+  <div style="display:flex; gap:4px;">
+    <button id="tab-calc" onclick="switchTab('calc')" style="flex:1; padding:10px; border-radius:10px 10px 0 0; font-family:'Heebo',sans-serif; font-size:14px; font-weight:700; cursor:pointer; background:rgba(37,99,235,0.15); border:1px solid rgba(37,99,235,0.3); border-bottom:none; color:#93c5fd;">מחשבון פרמיה</button>
+    <button id="tab-hours" onclick="switchTab('hours')" style="flex:1; padding:10px; border-radius:10px 10px 0 0; font-family:'Heebo',sans-serif; font-size:14px; font-weight:700; cursor:pointer; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-bottom:none; color:#64748b;">חישוב שעות</button>
+  </div>
+</div>
+
+<!-- TAB: Hours Calculator -->
+<div id="panel-hours" style="display:none;">
+<div class="container">
+  <div style="max-width:720px;">
+
+    <div class="section-title"><span>📆 בחירת חודש</span><div class="line"></div></div>
+    <div class="input-row">
+      <label style="color:#cbd5e1;">חודש</label>
+      <select id="hoursMonth" onchange="calcHours()" style="
+        width:160px; padding:5px 7px; border-radius:6px;
+        border:1px solid rgba(255,255,255,0.12);
+        background:rgba(255,255,255,0.08);
+        color:#f1f5f9; font-size:14px; font-weight:600;
+        text-align:center; outline:none;
+        font-family:'Heebo','Arial Hebrew','David',Arial,sans-serif;
+        direction:rtl; cursor:pointer;
+      "></select>
+    </div>
+
+    <div class="section-title"><span>📋 ימי עבודה ושעות</span><div class="line"></div></div>
+    <div style="font-size:11px; color:#64748b; margin-bottom:8px;">סמני את הימים שבהם את עובדת והכניסי שעות ליום</div>
+
+    <div id="dayInputs"></div>
+
+    <div class="section-title"><span>📊 תוצאות</span><div class="line"></div></div>
+
+    <div class="result-row accent">
+      <span class="rlabel">שעות פוטנציאליות (משרה מלאה)</span>
+      <span class="rvalue" id="hr_potential">—</span>
+    </div>
+    <div class="result-row accent">
+      <span class="rlabel">שעות תקן (לפי המשרה שלך)</span>
+      <span class="rvalue" id="hr_teken">—</span>
+    </div>
+
+    <div style="margin-top:12px;">
+      <button onclick="applyHoursToCalc()" style="
+        width:100%; padding:14px;
+        background:rgba(34,197,94,0.15); border:1px solid rgba(34,197,94,0.4);
+        border-radius:8px; color:#86efac; font-size:14px; font-weight:700;
+        font-family:'Heebo','Arial Hebrew','David',Arial,sans-serif; cursor:pointer;
+      ">העבר למחשבון הפרמיה ←</button>
+    </div>
+
+    <div class="section-title"><span>📅 פירוט ימים</span><div class="line"></div></div>
+    <div id="dayBreakdown" style="font-size:12px; color:#94a3b8; line-height:2;"></div>
+
+  </div>
+</div>
+</div>
+
+<!-- TAB: Premium Calculator -->
+<div id="panel-calc">
 <div class="container">
   <div class="grid">
 
@@ -390,6 +451,7 @@
 
   </div>
 </div>
+</div><!-- end panel-calc -->
 
 <script>
 function v(id) { return parseFloat(document.getElementById(id).value) || 0; }
@@ -971,6 +1033,297 @@ function downloadExcel() {
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
+
+// ---- TAB SWITCHING ----
+function switchTab(tab) {
+  document.getElementById('panel-calc').style.display = tab === 'calc' ? '' : 'none';
+  document.getElementById('panel-hours').style.display = tab === 'hours' ? '' : 'none';
+  document.getElementById('tab-calc').style.background = tab === 'calc' ? 'rgba(37,99,235,0.15)' : 'rgba(255,255,255,0.03)';
+  document.getElementById('tab-calc').style.borderColor = tab === 'calc' ? 'rgba(37,99,235,0.3)' : 'rgba(255,255,255,0.08)';
+  document.getElementById('tab-calc').style.color = tab === 'calc' ? '#93c5fd' : '#64748b';
+  document.getElementById('tab-hours').style.background = tab === 'hours' ? 'rgba(37,99,235,0.15)' : 'rgba(255,255,255,0.03)';
+  document.getElementById('tab-hours').style.borderColor = tab === 'hours' ? 'rgba(37,99,235,0.3)' : 'rgba(255,255,255,0.08)';
+  document.getElementById('tab-hours').style.color = tab === 'hours' ? '#93c5fd' : '#64748b';
+  if (tab === 'hours') calcHours();
+}
+
+// ---- ISRAELI HOLIDAY CALENDAR 2026-2027 ----
+// Types: 'chag' (no work), 'erev' (4hr/half), 'cholhamoed' (5hr/62.5%), 'yomAtzmaut' (no work), 'mekutzar' (full 8hr for potential)
+// In Israel: 1 day yom tov (not 2 like diaspora)
+const HOLIDAYS = {
+  // === 2026 ===
+  // Purim — Mar 3 (Tue) — yom mekutzar (counts as 8hr for potential)
+  '2026-03-03': { type: 'mekutzar', name: 'פורים' },
+  // Pesach
+  '2026-04-01': { type: 'erev', name: 'ערב פסח' },
+  '2026-04-02': { type: 'chag', name: 'פסח א׳' },
+  '2026-04-03': { type: 'cholhamoed', name: 'חול המועד פסח' },
+  '2026-04-04': { type: 'cholhamoed', name: 'חול המועד פסח (שבת)' },
+  '2026-04-05': { type: 'cholhamoed', name: 'חול המועד פסח' },
+  '2026-04-06': { type: 'cholhamoed', name: 'חול המועד פסח' },
+  '2026-04-07': { type: 'cholhamoed', name: 'חול המועד פסח' },
+  '2026-04-08': { type: 'chag', name: 'שביעי של פסח' },
+  // Yom HaShoah — Apr 14 (Tue) — not a day off at Clalit
+  // Yom HaZikaron — Apr 21 (Tue) — not a day off at Clalit (confirmed by Allison)
+  // Yom HaAtzmaut — Apr 22 (Wed)
+  '2026-04-22': { type: 'yomAtzmaut', name: 'יום העצמאות' },
+  // Shavuot
+  '2026-05-21': { type: 'erev', name: 'ערב שבועות' },
+  '2026-05-22': { type: 'chag', name: 'שבועות' },
+  // Rosh Hashana
+  '2026-09-11': { type: 'erev', name: 'ערב ראש השנה' },
+  '2026-09-12': { type: 'chag', name: 'ראש השנה א׳' },
+  '2026-09-13': { type: 'chag', name: 'ראש השנה ב׳' },
+  // Yom Kippur
+  '2026-09-20': { type: 'erev', name: 'ערב יום כיפור' },
+  '2026-09-21': { type: 'chag', name: 'יום כיפור' },
+  // Sukkot
+  '2026-09-25': { type: 'erev', name: 'ערב סוכות' },
+  '2026-09-26': { type: 'chag', name: 'סוכות א׳' },
+  '2026-09-27': { type: 'cholhamoed', name: 'חול המועד סוכות' },
+  '2026-09-28': { type: 'cholhamoed', name: 'חול המועד סוכות' },
+  '2026-09-29': { type: 'cholhamoed', name: 'חול המועד סוכות' },
+  '2026-09-30': { type: 'cholhamoed', name: 'חול המועד סוכות' },
+  '2026-10-01': { type: 'cholhamoed', name: 'חול המועד סוכות' },
+  '2026-10-02': { type: 'erev', name: 'הושענא רבה / ערב שמחת תורה' },
+  '2026-10-03': { type: 'chag', name: 'שמיני עצרת / שמחת תורה' },
+  // Chanukah — Dec 5-12 — yom mekutzar (full 8hr for potential)
+  '2026-12-05': { type: 'mekutzar', name: 'חנוכה' },
+  '2026-12-06': { type: 'mekutzar', name: 'חנוכה' },
+  '2026-12-07': { type: 'mekutzar', name: 'חנוכה' },
+  '2026-12-08': { type: 'mekutzar', name: 'חנוכה' },
+  '2026-12-09': { type: 'mekutzar', name: 'חנוכה' },
+  '2026-12-10': { type: 'mekutzar', name: 'חנוכה' },
+  '2026-12-11': { type: 'mekutzar', name: 'חנוכה' },
+  '2026-12-12': { type: 'mekutzar', name: 'חנוכה' },
+
+  // === 2027 ===
+  // Purim — Mar 23 (Tue)
+  '2027-03-23': { type: 'mekutzar', name: 'פורים' },
+  // Pesach
+  '2027-04-21': { type: 'erev', name: 'ערב פסח' },
+  '2027-04-22': { type: 'chag', name: 'פסח א׳' },
+  '2027-04-23': { type: 'cholhamoed', name: 'חול המועד פסח' },
+  '2027-04-24': { type: 'cholhamoed', name: 'חול המועד פסח (שבת)' },
+  '2027-04-25': { type: 'cholhamoed', name: 'חול המועד פסח' },
+  '2027-04-26': { type: 'cholhamoed', name: 'חול המועד פסח' },
+  '2027-04-27': { type: 'cholhamoed', name: 'חול המועד פסח' },
+  '2027-04-28': { type: 'chag', name: 'שביעי של פסח' },
+  // Yom HaAtzmaut — May 12 (Wed)
+  '2027-05-12': { type: 'yomAtzmaut', name: 'יום העצמאות' },
+  // Shavuot
+  '2027-06-10': { type: 'erev', name: 'ערב שבועות' },
+  '2027-06-11': { type: 'chag', name: 'שבועות' },
+  // Rosh Hashana
+  '2027-10-01': { type: 'erev', name: 'ערב ראש השנה' },
+  '2027-10-02': { type: 'chag', name: 'ראש השנה א׳' },
+  '2027-10-03': { type: 'chag', name: 'ראש השנה ב׳' },
+  // Yom Kippur
+  '2027-10-10': { type: 'erev', name: 'ערב יום כיפור' },
+  '2027-10-11': { type: 'chag', name: 'יום כיפור' },
+  // Sukkot
+  '2027-10-15': { type: 'erev', name: 'ערב סוכות' },
+  '2027-10-16': { type: 'chag', name: 'סוכות א׳' },
+  '2027-10-17': { type: 'cholhamoed', name: 'חול המועד סוכות' },
+  '2027-10-18': { type: 'cholhamoed', name: 'חול המועד סוכות' },
+  '2027-10-19': { type: 'cholhamoed', name: 'חול המועד סוכות' },
+  '2027-10-20': { type: 'cholhamoed', name: 'חול המועד סוכות' },
+  '2027-10-21': { type: 'cholhamoed', name: 'חול המועד סוכות' },
+  '2027-10-22': { type: 'erev', name: 'הושענא רבה / ערב שמחת תורה' },
+  '2027-10-23': { type: 'chag', name: 'שמיני עצרת / שמחת תורה' },
+  // Chanukah — Dec 25 - Jan 1
+  '2027-12-25': { type: 'mekutzar', name: 'חנוכה' },
+  '2027-12-26': { type: 'mekutzar', name: 'חנוכה' },
+  '2027-12-27': { type: 'mekutzar', name: 'חנוכה' },
+  '2027-12-28': { type: 'mekutzar', name: 'חנוכה' },
+  '2027-12-29': { type: 'mekutzar', name: 'חנוכה' },
+  '2027-12-30': { type: 'mekutzar', name: 'חנוכה' },
+  '2027-12-31': { type: 'mekutzar', name: 'חנוכה' },
+};
+
+const DAY_NAMES_HE = ['א׳','ב׳','ג׳','ד׳','ה׳','ו׳','ש׳'];
+const FULL_DAY_NAMES = ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
+
+// Build hours month selector (Jan 2026 - Dec 2027)
+(function() {
+  const monthNames = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
+  const sel = document.getElementById('hoursMonth');
+  const now = new Date();
+  for (let y = 2026; y <= 2027; y++) {
+    for (let m = 0; m < 12; m++) {
+      const opt = document.createElement('option');
+      opt.value = y + '-' + String(m+1).padStart(2,'0');
+      opt.textContent = monthNames[m] + ' ' + y;
+      if (y === now.getFullYear() && m === now.getMonth()) opt.selected = true;
+      sel.appendChild(opt);
+    }
+  }
+})();
+
+// Build day input checkboxes (Sun=0 through Thu=4)
+(function() {
+  const container = document.getElementById('dayInputs');
+  const days = [
+    { idx: 0, name: 'א׳ (ראשון)', id: 'day0' },
+    { idx: 1, name: 'ב׳ (שני)', id: 'day1' },
+    { idx: 2, name: 'ג׳ (שלישי)', id: 'day2' },
+    { idx: 3, name: 'ד׳ (רביעי)', id: 'day3' },
+    { idx: 4, name: 'ה׳ (חמישי)', id: 'day4' },
+  ];
+  days.forEach(d => {
+    const row = document.createElement('div');
+    row.className = 'input-row';
+    row.innerHTML = `
+      <label style="display:flex; align-items:center; gap:8px;">
+        <input type="checkbox" id="chk_${d.id}" onchange="calcHours()" style="width:18px; height:18px; accent-color:#3b82f6;">
+        <span style="font-size:13px; color:#cbd5e1;">${d.name}</span>
+      </label>
+      <span class="unit">שעות</span>
+      <input type="number" inputmode="decimal" id="hrs_${d.id}" value="" placeholder="0" step="0.5" oninput="calcHours()" style="
+        width:70px; padding:5px 7px; border-radius:6px;
+        border:1px solid rgba(255,255,255,0.12);
+        background:rgba(255,255,255,0.08);
+        color:#f1f5f9; font-size:14px; font-weight:600;
+        text-align:center; outline:none; font-family:monospace;
+      ">
+    `;
+    container.appendChild(row);
+  });
+})();
+
+function calcHours() {
+  const monthVal = document.getElementById('hoursMonth').value; // "2026-04"
+  const [year, month] = monthVal.split('-').map(Number);
+  const daysInMonth = new Date(year, month, 0).getDate();
+
+  // Get user's work days and hours
+  const workDays = {};
+  for (let i = 0; i <= 4; i++) {
+    const checked = document.getElementById('chk_day' + i).checked;
+    const hrs = parseFloat(document.getElementById('hrs_day' + i).value) || 0;
+    if (checked && hrs > 0) workDays[i] = hrs;
+  }
+
+  let potential = 0;
+  let teken = 0;
+  const breakdown = [];
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const date = new Date(year, month - 1, d);
+    const dow = date.getDay(); // 0=Sun, 6=Sat
+    const dateStr = year + '-' + String(month).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+    const holiday = HOLIDAYS[dateStr];
+
+    // Skip Friday (5) and Saturday (6) for potential
+    if (dow === 5 || dow === 6) continue;
+
+    // Potential hours (full time = 8hr base)
+    let potentialDay = 8;
+    let tekenMultiplier = 1;
+    let dayLabel = DAY_NAMES_HE[dow] + ' ' + d + '/' + month;
+    let dayNote = '';
+
+    if (holiday) {
+      if (holiday.type === 'chag' || holiday.type === 'yomAtzmaut') {
+        potentialDay = 0;
+        tekenMultiplier = 0;
+        dayNote = holiday.name + ' — 0 שעות';
+      } else if (holiday.type === 'erev') {
+        potentialDay = 4;
+        tekenMultiplier = 0.5; // 50% of regular hours
+        dayNote = holiday.name + ' — 4 שעות (50%)';
+      } else if (holiday.type === 'cholhamoed') {
+        potentialDay = 5;
+        tekenMultiplier = 0.625; // 62.5% of regular hours
+        dayNote = holiday.name + ' — 5 שעות (62.5%)';
+      } else if (holiday.type === 'mekutzar') {
+        potentialDay = 8; // counts as full day
+        tekenMultiplier = 1;
+        dayNote = holiday.name + ' — 8 שעות (יום מקוצר = מלא)';
+      }
+    } else {
+      dayNote = 'יום רגיל — 8 שעות';
+    }
+
+    potential += potentialDay;
+
+    // Teken: only for user's work days
+    if (dow in workDays) {
+      const regularHours = workDays[dow];
+      const tekenHours = regularHours * tekenMultiplier;
+      teken += tekenHours;
+      if (tekenMultiplier !== 1 && tekenMultiplier !== 0) {
+        dayNote += ` | תקן: ${tekenHours.toFixed(2)}`;
+      } else if (tekenMultiplier === 1) {
+        dayNote += ` | תקן: ${regularHours}`;
+      }
+      breakdown.push(`<div style="color:#93c5fd;">${dayLabel} — ${dayNote} ✓</div>`);
+    } else {
+      breakdown.push(`<div>${dayLabel} — ${dayNote}</div>`);
+    }
+  }
+
+  document.getElementById('hr_potential').textContent = potential + ' שעות';
+  document.getElementById('hr_teken').textContent = teken.toFixed(2) + ' שעות';
+  document.getElementById('dayBreakdown').innerHTML = breakdown.join('');
+
+  // Save hours tab state
+  try {
+    const hdata = { month: monthVal, days: {} };
+    for (let i = 0; i <= 4; i++) {
+      hdata.days[i] = {
+        checked: document.getElementById('chk_day' + i).checked,
+        hrs: document.getElementById('hrs_day' + i).value
+      };
+    }
+    localStorage.setItem('premiot_hours', JSON.stringify(hdata));
+  } catch(e) {}
+}
+
+function applyHoursToCalc() {
+  const pot = document.getElementById('hr_potential').textContent.replace(/[^\d.]/g,'');
+  const tek = document.getElementById('hr_teken').textContent.replace(/[^\d.]/g,'');
+  document.getElementById('shaPotential').value = pot;
+  document.getElementById('shaTeken').value = tek;
+  // Sync the month selector on calc tab
+  const monthVal = document.getElementById('hoursMonth').value;
+  const [y, m] = monthVal.split('-').map(Number);
+  const monthNames = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
+  const label = monthNames[m-1] + ' ' + y;
+  const sel = document.getElementById('selectedMonth');
+  // Add option if not exists
+  let found = false;
+  for (let i = 0; i < sel.options.length; i++) {
+    if (sel.options[i].value === label) { sel.selectedIndex = i; found = true; break; }
+  }
+  if (!found) {
+    const opt = document.createElement('option');
+    opt.value = label;
+    opt.textContent = label;
+    sel.appendChild(opt);
+    sel.value = label;
+  }
+  switchTab('calc');
+  calc();
+}
+
+// Restore hours tab state from localStorage
+(function() {
+  try {
+    const raw = localStorage.getItem('premiot_hours');
+    if (!raw) return;
+    const hdata = JSON.parse(raw);
+    if (hdata.month) document.getElementById('hoursMonth').value = hdata.month;
+    if (hdata.days) {
+      for (let i = 0; i <= 4; i++) {
+        if (hdata.days[i]) {
+          document.getElementById('chk_day' + i).checked = !!hdata.days[i].checked;
+          document.getElementById('hrs_day' + i).value = hdata.days[i].hrs || '';
+        }
+      }
+    }
+  } catch(e) {}
+})();
 
 loadFromStorage();
 calc();
