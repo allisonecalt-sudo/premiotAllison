@@ -433,21 +433,21 @@
           display:flex; justify-content:space-between; align-items:center;
         "><span>💰 פירוט פרמיות</span><span id="arrow_detailPremia" style="transition:transform 0.2s;">▼</span></button>
         <div id="detailPremia" style="display:none; margin-top:6px;">
-          <div class="result-row">
-            <span class="rlabel">פרמיית עבודה (לפני תקרה)</span>
-            <span class="rvalue" id="r_avoda_before">—</span>
-          </div>
           <div class="result-row accent">
             <span class="rlabel">פרמיית עבודה — סמל 1783</span>
             <span class="rvalue" id="r_avoda">—</span>
           </div>
-          <div class="result-row">
-            <span class="rlabel">פרמיית העדרות (לפני תקרה)</span>
-            <span class="rvalue" id="r_headrut_before">—</span>
+          <div class="result-row" id="row_avoda_before" style="display:none;">
+            <span class="rlabel" style="font-size:11px; color:#94a3b8;">↑ לפני תקרה</span>
+            <span class="rvalue" id="r_avoda_before" style="font-size:12px; color:#94a3b8;">—</span>
           </div>
           <div class="result-row accent">
             <span class="rlabel">פרמיית העדרות — סמל 1785</span>
             <span class="rvalue" id="r_headrut">—</span>
+          </div>
+          <div class="result-row" id="row_headrut_before" style="display:none;">
+            <span class="rlabel" style="font-size:11px; color:#94a3b8;">↑ לפני תקרה</span>
+            <span class="rvalue" id="r_headrut_before" style="font-size:12px; color:#94a3b8;">—</span>
           </div>
         </div>
       </div>
@@ -787,10 +787,15 @@ function calc() {
   set('r_totalHours', totalHoursLeTashlum.toFixed(2), 'שעות');
   set('r_mishra', (mishraPct * 100).toFixed(1), '%');
   set('r_takara', '₪' + takaraHodesh.toFixed(2));
-  set('r_avoda_before', '₪' + premiatAvodaBefore.toFixed(2));
   set('r_avoda', '₪' + premiatAvoda.toFixed(2));
-  set('r_headrut_before', '₪' + premiatHeadrutBefore.toFixed(2));
   set('r_headrut', '₪' + premiatHeadrut.toFixed(2));
+  // Show "before cap" only when cap reduced the amount
+  const avodaCapped = premiatAvodaBefore.toFixed(2) !== premiatAvoda.toFixed(2);
+  document.getElementById('row_avoda_before').style.display = avodaCapped ? '' : 'none';
+  if (avodaCapped) set('r_avoda_before', '₪' + premiatAvodaBefore.toFixed(2));
+  const headrutCapped = premiatHeadrutBefore.toFixed(2) !== premiatHeadrut.toFixed(2);
+  document.getElementById('row_headrut_before').style.display = headrutCapped ? '' : 'none';
+  if (headrutCapped) set('r_headrut_before', '₪' + premiatHeadrutBefore.toFixed(2));
   document.getElementById('r_total').textContent = '₪' + total.toFixed(2);
   document.getElementById('r_total_sub').textContent = 'סמל 1783: ₪' + premiatAvoda.toFixed(2) + ' | סמל 1785: ₪' + premiatHeadrut.toFixed(2);
 
