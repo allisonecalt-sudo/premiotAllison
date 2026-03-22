@@ -180,6 +180,22 @@
         <input type="hidden" id="makdam" value="2">
       </div>
 
+      <div class="section-title"><span>📆 חודש</span><div class="line"></div></div>
+
+      <div class="input-row">
+        <label style="color:#cbd5e1;">חודש חישוב</label>
+        <select id="selectedMonth" onchange="saveToStorage()" style="
+          width:160px; padding:5px 7px; border-radius:6px;
+          border:1px solid rgba(255,255,255,0.12);
+          background:rgba(255,255,255,0.08);
+          color:#f1f5f9; font-size:14px; font-weight:600;
+          text-align:center; outline:none;
+          font-family:'Heebo','Arial Hebrew','David',Arial,sans-serif;
+          direction:rtl; cursor:pointer;
+        ">
+        </select>
+      </div>
+
       <div class="section-title"><span>⏱️ שעות עבודה</span><div class="line"></div></div>
 
       <div class="input-row">
@@ -529,6 +545,25 @@ function updateUndoBtn() {
   btn.style.cursor = undoStack.length > 0 ? 'pointer' : 'default';
 }
 
+// ---- MONTH SELECTOR ----
+(function() {
+  const monthNames = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
+  const sel = document.getElementById('selectedMonth');
+  const now = new Date();
+  const curMonth = now.getMonth();
+  const curYear = now.getFullYear();
+  // Show current month +/- 2 months
+  for (let offset = -2; offset <= 2; offset++) {
+    const m = (curMonth + offset + 12) % 12;
+    const y = curYear + Math.floor((curMonth + offset) / 12);
+    const opt = document.createElement('option');
+    opt.value = monthNames[m] + ' ' + y;
+    opt.textContent = monthNames[m] + ' ' + y;
+    if (offset === 0) opt.selected = true;
+    sel.appendChild(opt);
+  }
+})();
+
 // Wire up undo snapshots on input focus (captures "before" state)
 UNDO_FIELDS.forEach(id => {
   const el = document.getElementById(id);
@@ -542,8 +577,8 @@ function saveToStorage() {
   try {
     const data = {};
     SAVE_FIELDS.forEach(id => { data[id] = document.getElementById(id).value; });
-    // Save vetek state based on takara value
     data.isVetek = document.getElementById('takara').value == 5838.25 ? '1' : '0';
+    data.selectedMonth = document.getElementById('selectedMonth').value;
     localStorage.setItem('premiot_data', JSON.stringify(data));
   } catch(e) {}
 }
@@ -560,6 +595,13 @@ function loadFromStorage() {
     });
     // Restore vetek button state
     if (data.isVetek === '1') setVetek(true);
+    // Restore selected month
+    if (data.selectedMonth) {
+      const sel = document.getElementById('selectedMonth');
+      for (let i = 0; i < sel.options.length; i++) {
+        if (sel.options[i].value === data.selectedMonth) { sel.selectedIndex = i; break; }
+      }
+    }
   } catch(e) {}
 }
 
@@ -785,10 +827,9 @@ function getSummaryData() {
   const val = id => document.getElementById(id)?.value || '0';
   const get = id => document.getElementById(id)?.textContent?.trim() || '—';
   const isVetek = parseFloat(val('takara')) === 5838.25;
-  const now = new Date();
-  const monthNames = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
+  const selectedMonth = document.getElementById('selectedMonth')?.value || '';
   return {
-    month: monthNames[now.getMonth()] + ' ' + now.getFullYear(),
+    month: selectedMonth,
     isVetek,
     shaPotential: val('shaPotential'),
     shaTeken: val('shaTeken'),
@@ -820,23 +861,25 @@ function downloadPDF() {
 <meta charset="UTF-8">
 <title>פרמיה ${d.month}</title>
 <style>
-  body { font-family: Arial, sans-serif; direction: rtl; padding: 32px; color: #1e293b; max-width: 600px; margin: 0 auto; }
-  h1 { font-size: 22px; margin-bottom: 4px; }
-  .sub { font-size: 12px; color: #64748b; margin-bottom: 24px; }
-  table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-  th { background: #1e3a5f; color: white; padding: 8px 12px; font-size: 13px; text-align: right; }
-  td { padding: 7px 12px; font-size: 13px; border-bottom: 1px solid #e2e8f0; text-align: right; }
+  @page { size: A4; margin: 18mm 16mm; }
+  @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+  body { font-family: Arial, sans-serif; direction: rtl; padding: 0; color: #1e293b; max-width: 600px; margin: 0 auto; }
+  h1 { font-size: 20px; margin-bottom: 2px; }
+  .sub { font-size: 11px; color: #64748b; margin-bottom: 16px; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+  th { background: #1e3a5f; color: white; padding: 6px 10px; font-size: 12px; text-align: right; }
+  td { padding: 5px 10px; font-size: 12px; border-bottom: 1px solid #e2e8f0; text-align: right; }
   tr:nth-child(even) td { background: #f8fafc; }
   .accent td { background: #dbeafe !important; font-weight: 700; }
-  .total td { background: #1e3a5f !important; color: white; font-size: 16px; font-weight: 800; padding: 12px; }
-  .warning { font-size: 11px; color: #94a3b8; margin-top: 24px; border-top: 1px solid #e2e8f0; padding-top: 12px; }
+  .total td { background: #1e3a5f !important; color: white; font-size: 15px; font-weight: 800; padding: 10px; }
+  .warning { font-size: 10px; color: #94a3b8; margin-top: 16px; border-top: 1px solid #e2e8f0; padding-top: 8px; }
 </style>
 </head>
 <body>
 <h1>מחשבון פרמיות — ${d.month}</h1>
-<div class="sub">כללית | ריפוי בעיסוק | התפתחות הילד | ירושלים &nbsp;|&nbsp; סוג עובדת: ${d.isVetek ? 'ותיקה' : 'רגילה'}</div>
+<div class="sub">כללית | ריפוי בעיסוק | התפתחות הילד | ירושלים | סוג עובדת: ${d.isVetek ? 'ותיקה' : 'רגילה'}</div>
 <table>
-  <tr><th colspan="2">⏱️ שעות עבודה</th></tr>
+  <tr><th colspan="2">שעות עבודה</th></tr>
   <tr><td>שעות פוטנציאליות</td><td>${d.shaPotential}</td></tr>
   <tr><td>שעות תקן</td><td>${d.shaTeken}</td></tr>
   <tr><td>שעות שלט</td><td>${d.shaLaTipulit}</td></tr>
@@ -844,12 +887,12 @@ function downloadPDF() {
   <tr class="accent"><td>שעות עבודה (מחושב)</td><td>${d.shaAvoda}</td></tr>
 </table>
 <table>
-  <tr><th colspan="2">📅 היעדרויות</th></tr>
+  <tr><th colspan="2">היעדרויות</th></tr>
   <tr><td>היעדרות מזכה</td><td>${d.headrutMazaka} שעות</td></tr>
   <tr><td>היעדרות לא מזכה (מחלה)</td><td>${d.headrutLoMazaka} שעות</td></tr>
 </table>
 <table>
-  <tr><th colspan="2">📊 תפוקות</th></tr>
+  <tr><th colspan="2">תפוקות</th></tr>
   <tr><td>כמות תפוקות</td><td>${d.tifukot}</td></tr>
   <tr><td>ממוצע שנתי (12 חודשים)</td><td>${d.avgShnati}</td></tr>
   <tr><td>טיפולים משוקללים</td><td>${d.r_tipulim}</td></tr>
@@ -857,19 +900,19 @@ function downloadPDF() {
   <tr><td>סך שעות לתשלום</td><td>${d.r_totalHours}</td></tr>
 </table>
 <table>
-  <tr><th colspan="2">🎯 משרה ותקרה</th></tr>
-  <tr><td>אחוז משרה בפועל</td><td>${d.r_mishra}%</td></tr>
+  <tr><th colspan="2">משרה ותקרה</th></tr>
+  <tr><td>אחוז משרה בפועל</td><td>${d.r_mishra}</td></tr>
   <tr class="accent"><td>תקרת תשלום חודשית</td><td>${d.r_takara}</td></tr>
 </table>
 <table>
-  <tr><th colspan="2">💰 פרמיות</th></tr>
+  <tr><th colspan="2">פרמיות</th></tr>
   <tr><td>פרמיית עבודה לפני תקרה</td><td>${d.r_avoda_before}</td></tr>
   <tr class="accent"><td>פרמיית עבודה — סמל 1783</td><td>${d.r_avoda}</td></tr>
   <tr><td>פרמיית העדרות לפני תקרה</td><td>${d.r_headrut_before}</td></tr>
   <tr class="accent"><td>פרמיית העדרות — סמל 1785</td><td>${d.r_headrut}</td></tr>
   <tr class="total"><td>סך פרמיה</td><td>${d.r_total}</td></tr>
 </table>
-<div class="warning">⚠️ כלי עזר בלבד — נבנה על ידי אליסון אלט. עשוי להיות מכוייל עד ~₪30 מהתלוש הרשמי.</div>
+<div class="warning">כלי עזר בלבד — נבנה על ידי אליסון אלט. עשוי להיות מכוייל עד ~30 ש״ח מהתלוש הרשמי.</div>
 </body></html>`;
   const win = window.open('', '_blank');
   if (!win) { alert('יש לאפשר חלונות קופצים בדפדפן כדי לשמור PDF'); return; }
@@ -905,7 +948,7 @@ function downloadExcel() {
     ['סך שעות לתשלום', d.r_totalHours],
     ['', ''],
     ['משרה ותקרה', ''],
-    ['אחוז משרה בפועל', d.r_mishra + '%'],
+    ['אחוז משרה בפועל', d.r_mishra],
     ['תקרת תשלום חודשית', d.r_takara],
     ['', ''],
     ['פרמיות', ''],
