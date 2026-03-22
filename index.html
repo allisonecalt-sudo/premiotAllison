@@ -274,23 +274,19 @@
         <input type="hidden" id="makdam" value="2">
       </div>
 
-      <div class="section-title"><span>📆 חודש</span><div class="line"></div></div>
-
-      <div class="input-row">
-        <label style="color:#cbd5e1;">חודש חישוב</label>
-        <select id="selectedMonth" onchange="saveToStorage()" style="
-          width:160px; padding:8px 10px; border-radius:6px;
-          border:1px solid rgba(37,99,235,0.4);
-          background:#1e293b;
-          color:#e2e8f0; font-size:14px; font-weight:600;
-          text-align:center; outline:none;
-          font-family:'Heebo','Arial Hebrew','David',Arial,sans-serif;
-          direction:rtl; cursor:pointer;
-        ">
-        </select>
-      </div>
-
       <div class="section-title"><span>⏱️ שעות עבודה</span><div class="line"></div></div>
+
+      <!-- Month display — auto-populated from hours tab -->
+      <div onclick="syncMonthAndGoToHours()" style="
+        display:flex; justify-content:space-between; align-items:center;
+        padding:10px 14px; margin-bottom:8px; border-radius:8px;
+        background:rgba(37,99,235,0.08); border:1px solid rgba(37,99,235,0.25);
+        cursor:pointer;
+      ">
+        <span style="font-size:13px; color:#93c5fd; font-weight:600;">📆 <span id="selectedMonthDisplay">לא נבחר חודש</span></span>
+        <span style="font-size:11px; color:#3b82f6;">שנה בטאב שעות ←</span>
+      </div>
+      <select id="selectedMonth" onchange="saveToStorage()" style="display:none;"></select>
 
       <div class="input-row">
         <label>
@@ -299,9 +295,6 @@
         </label>
         <span class="unit">שעות</span>
         <input type="number" inputmode="decimal" id="shaPotential" value="" placeholder="0" step="0.5" oninput="calc()">
-      </div>
-      <div id="hoursHint" style="text-align:center; margin:-2px 0 6px;">
-        <a onclick="syncMonthAndGoToHours()" style="font-size:11px; color:#3b82f6; cursor:pointer; text-decoration:underline;">לא בטוחה? חשבי אוטומטית בטאב שעות ←</a>
       </div>
 
       <div class="input-row">
@@ -729,6 +722,7 @@ function loadFromStorage() {
       for (let i = 0; i < sel.options.length; i++) {
         if (sel.options[i].value === data.selectedMonth) { sel.selectedIndex = i; break; }
       }
+      document.getElementById('selectedMonthDisplay').textContent = data.selectedMonth;
     }
   } catch(e) {}
 }
@@ -1398,26 +1392,13 @@ function applyHoursToCalc() {
     sel.appendChild(opt);
     sel.value = label;
   }
+  // Update month display label
+  document.getElementById('selectedMonthDisplay').textContent = label;
   switchTab('calc');
   calc();
 }
 
 function syncMonthAndGoToHours() {
-  // Get the selected month from premium calc and sync to hours tab
-  const sel = document.getElementById('selectedMonth');
-  const label = sel.value; // e.g. "אפריל 2026"
-  const monthNames = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
-  const parts = label.split(' ');
-  if (parts.length === 2) {
-    const mIdx = monthNames.indexOf(parts[0]);
-    const y = parseInt(parts[1]);
-    if (mIdx >= 0 && y) {
-      const val = y + '-' + String(mIdx + 1).padStart(2, '0');
-      const hoursSel = document.getElementById('hoursMonth');
-      hoursSel.value = val;
-      calcHours();
-    }
-  }
   switchTab('hours');
 }
 
