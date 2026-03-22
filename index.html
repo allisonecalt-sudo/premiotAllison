@@ -147,9 +147,9 @@
 
 <!-- Tab Navigation -->
 <div style="max-width:720px; margin:0 auto; padding:16px 14px 0;">
-  <div style="display:flex; gap:4px;">
-    <button id="tab-calc" onclick="switchTab('calc')" style="flex:1; padding:10px; border-radius:10px 10px 0 0; font-family:'Heebo',sans-serif; font-size:14px; font-weight:700; cursor:pointer; background:rgba(37,99,235,0.15); border:1px solid rgba(37,99,235,0.3); border-bottom:none; color:#93c5fd;">מחשבון פרמיה</button>
-    <button id="tab-hours" onclick="switchTab('hours')" style="flex:1; padding:10px; border-radius:10px 10px 0 0; font-family:'Heebo',sans-serif; font-size:14px; font-weight:700; cursor:pointer; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-bottom:none; color:#64748b;">חישוב שעות</button>
+  <div style="display:flex; gap:0; background:rgba(255,255,255,0.06); border-radius:10px; padding:4px; border:1px solid rgba(255,255,255,0.08);">
+    <button id="tab-calc" onclick="switchTab('calc')" style="flex:1; padding:10px; border-radius:8px; font-family:'Heebo',sans-serif; font-size:14px; font-weight:700; cursor:pointer; background:rgba(37,99,235,0.7); border:none; color:#fff;">מחשבון פרמיה</button>
+    <button id="tab-hours" onclick="switchTab('hours')" style="flex:1; padding:10px; border-radius:8px; font-family:'Heebo',sans-serif; font-size:14px; font-weight:700; cursor:pointer; background:transparent; border:none; color:#64748b;">חישוב שעות</button>
   </div>
 </div>
 
@@ -1082,12 +1082,10 @@ function toggleSection(id) {
 function switchTab(tab) {
   document.getElementById('panel-calc').style.display = tab === 'calc' ? '' : 'none';
   document.getElementById('panel-hours').style.display = tab === 'hours' ? '' : 'none';
-  document.getElementById('tab-calc').style.background = tab === 'calc' ? 'rgba(37,99,235,0.15)' : 'rgba(255,255,255,0.03)';
-  document.getElementById('tab-calc').style.borderColor = tab === 'calc' ? 'rgba(37,99,235,0.3)' : 'rgba(255,255,255,0.08)';
-  document.getElementById('tab-calc').style.color = tab === 'calc' ? '#93c5fd' : '#64748b';
-  document.getElementById('tab-hours').style.background = tab === 'hours' ? 'rgba(37,99,235,0.15)' : 'rgba(255,255,255,0.03)';
-  document.getElementById('tab-hours').style.borderColor = tab === 'hours' ? 'rgba(37,99,235,0.3)' : 'rgba(255,255,255,0.08)';
-  document.getElementById('tab-hours').style.color = tab === 'hours' ? '#93c5fd' : '#64748b';
+  document.getElementById('tab-calc').style.background = tab === 'calc' ? 'rgba(37,99,235,0.7)' : 'transparent';
+  document.getElementById('tab-calc').style.color = tab === 'calc' ? '#fff' : '#64748b';
+  document.getElementById('tab-hours').style.background = tab === 'hours' ? 'rgba(37,99,235,0.7)' : 'transparent';
+  document.getElementById('tab-hours').style.color = tab === 'hours' ? '#fff' : '#64748b';
   if (tab === 'hours') calcHours();
 }
 
