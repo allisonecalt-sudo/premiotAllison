@@ -231,6 +231,10 @@
           <span id="stickyTakara" style="font-size:10px; color:#64748b;">תקרה: —</span>
         </div>
       </div>
+      <div style="text-align:center; border-right:1px solid rgba(255,255,255,0.1); padding-right:12px;">
+        <div style="font-size:10px; color:#94a3b8; font-weight:600;">ממוצע</div>
+        <div id="r_avg_sticky" style="font-size:16px; font-weight:800; color:#e2e8f0; font-family:monospace;">—</div>
+      </div>
     </div>
   </div>
 
@@ -809,6 +813,10 @@ function calc() {
   document.getElementById('r_total_sticky').style.color = stickyColor;
   document.getElementById('stickyPct').textContent = stickyPctVal.toFixed(0) + '%';
   document.getElementById('stickyTakara').textContent = 'תקרה: ₪' + takaraHodesh.toFixed(0);
+  // Update sticky ממוצע
+  const avgStickyEl = document.getElementById('r_avg_sticky');
+  avgStickyEl.textContent = avgTipulim.toFixed(3);
+  avgStickyEl.style.color = avgTipulim >= 1 ? '#22c55e' : '#ef4444';
 
   // ---- PROGRESS TOWARD תקרה ----
   const gapToTakara = takaraHodesh - total;
