@@ -271,13 +271,13 @@
 
       <!-- Undo + Reset + Copy Buttons -->
       <div style="display:flex; gap:8px; margin-top:16px;">
-        <button id="undoBtn" onclick="undoFields()" style="
+        <button id="undoBtn" onclick="undoFields()" title="חזרה לערכים הקודמים — אפשר ללחוץ כמה פעמים" style="
           flex:1; padding:12px;
           background: rgba(168,85,247,0.1); border: 1px solid rgba(168,85,247,0.3);
           border-radius: 8px; color: #c4b5fd; font-size: 13px; font-weight: 600;
           font-family: 'Heebo', 'Arial Hebrew', 'David', Arial, sans-serif; cursor: pointer;
           opacity: 0.4;
-        ">↩ בטל</button>
+        ">↩ חזור</button>
         <button onclick="resetFields()" style="
           flex:1; padding:12px;
           background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3);
@@ -529,6 +529,12 @@ function updateUndoBtn() {
   btn.style.cursor = undoStack.length > 0 ? 'pointer' : 'default';
 }
 
+// Wire up undo snapshots on input focus (captures "before" state)
+UNDO_FIELDS.forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('focus', saveUndoSnapshot);
+});
+
 // ---- LOCAL STORAGE: auto-save & restore ----
 const SAVE_FIELDS = ['shaPotential','shaTeken','shaNosfot','shaLaTipulit','headrutMazaka','headrutLoMazaka','tifukot','avgShnati','takara'];
 
@@ -559,7 +565,6 @@ function loadFromStorage() {
 
 
 function calc() {
-  saveUndoSnapshot();
   const tarif = v('tarif');
   const takara = v('takara');
   const makdam = v('makdam');
