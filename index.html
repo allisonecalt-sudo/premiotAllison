@@ -36,6 +36,13 @@
   .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
   @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
 
+  .sticky-result {
+    position: sticky; top: 0; z-index: 50;
+    background: #0a0f1e; padding: 10px 0 6px;
+    border-bottom: 1px solid rgba(37,99,235,0.2);
+    margin-bottom: 10px;
+  }
+
   .section-title {
     display: flex; align-items: center; gap: 8px;
     margin-bottom: 10px; margin-top: 20px;
@@ -207,6 +214,26 @@
 <!-- TAB: Premium Calculator -->
 <div id="panel-calc">
 <div class="container">
+
+  <!-- STICKY RESULT — always visible while scrolling -->
+  <div class="sticky-result">
+    <div style="display:flex; align-items:center; gap:12px; justify-content:center;">
+      <div style="text-align:center;">
+        <div style="font-size:11px; color:#93c5fd; font-weight:600;">סך פרמיה</div>
+        <div id="r_total_sticky" style="font-size:28px; font-weight:800; color:#3b82f6; font-family:monospace;">₪0.00</div>
+      </div>
+      <div style="flex:1; max-width:200px;">
+        <div id="stickyProgress" style="background:rgba(255,255,255,0.07); border-radius:99px; height:8px; overflow:hidden;">
+          <div id="stickyProgressBar" style="width:0%; height:100%; background:#3b82f6; border-radius:99px; transition:width 0.4s;"></div>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-top:3px;">
+          <span id="stickyPct" style="font-size:10px; color:#64748b;">0%</span>
+          <span id="stickyTakara" style="font-size:10px; color:#64748b;">תקרה: —</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="grid">
 
     <!-- LEFT: Inputs -->
@@ -766,6 +793,16 @@ function calc() {
   set('r_headrut', '₪' + premiatHeadrut.toFixed(2));
   document.getElementById('r_total').textContent = '₪' + total.toFixed(2);
   document.getElementById('r_total_sub').textContent = 'סמל 1783: ₪' + premiatAvoda.toFixed(2) + ' | סמל 1785: ₪' + premiatHeadrut.toFixed(2);
+
+  // Update sticky result
+  document.getElementById('r_total_sticky').textContent = '₪' + total.toFixed(2);
+  const stickyPctVal = takaraHodesh > 0 ? Math.min(total / takaraHodesh * 100, 100) : 0;
+  const stickyColor = stickyPctVal >= 100 ? '#22c55e' : stickyPctVal >= 75 ? '#3b82f6' : stickyPctVal >= 40 ? '#fbbf24' : '#ef4444';
+  document.getElementById('stickyProgressBar').style.width = stickyPctVal + '%';
+  document.getElementById('stickyProgressBar').style.background = stickyColor;
+  document.getElementById('r_total_sticky').style.color = stickyColor;
+  document.getElementById('stickyPct').textContent = stickyPctVal.toFixed(0) + '%';
+  document.getElementById('stickyTakara').textContent = 'תקרה: ₪' + takaraHodesh.toFixed(0);
 
   // ---- PROGRESS TOWARD תקרה ----
   const gapToTakara = takaraHodesh - total;
