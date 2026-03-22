@@ -380,75 +380,104 @@
 
     <!-- RIGHT: Results -->
     <div>
-      <div class="section-title"><span>🔢 ניתוח ביניים</span><div class="line"></div></div>
-
-      <div class="result-row">
-        <span class="rlabel">טיפולים משוקללים</span>
-        <span class="rvalue" id="r_tipulim">—</span>
-      </div>
-      <div class="result-row">
-        <span class="rlabel">מכנה (שעות מושקעות)</span>
-        <span class="rvalue" id="r_mecane">—</span>
-      </div>
-      <div class="result-row">
-        <span class="rlabel">ממוצע טיפולים לתשלום</span>
-        <span class="rvalue" id="r_avg">—</span>
-      </div>
-      <div class="result-row">
-        <span class="rlabel">סך שעות לתשלום</span>
-        <span class="rvalue" id="r_totalHours">—</span>
-      </div>
-
-      <div class="section-title"><span>🎯 משרה ותקרה</span><div class="line"></div></div>
-
-      <div class="result-row">
-        <span class="rlabel">אחוז משרה בפועל</span>
-        <span class="rvalue" id="r_mishra">—</span>
-      </div>
-      <div class="result-row accent">
-        <span class="rlabel">תקרת תשלום לחודש</span>
-        <span class="rvalue" id="r_takara">—</span>
-      </div>
-
-      <div class="divider"></div>
-
-      <!-- Alert area -->
-      <div id="alertArea"></div>
-
-      <div class="section-title"><span>💰 פרמיות</span><div class="line"></div></div>
-
-      <div class="result-row">
-        <span class="rlabel">פרמיית עבודה (לפני תקרה)</span>
-        <span class="rvalue" id="r_avoda_before">—</span>
-      </div>
-      <div class="result-row accent">
-        <span class="rlabel">פרמיית עבודה סמל 1783</span>
-        <span class="rvalue" id="r_avoda">—</span>
-      </div>
-      <div class="divider"></div>
-      <div class="result-row">
-        <span class="rlabel">פרמיית העדרות (לפני תקרה)</span>
-        <span class="rvalue" id="r_headrut_before">—</span>
-      </div>
-      <div class="result-row accent">
-        <span class="rlabel">פרמיית העדרות סמל 1785</span>
-        <span class="rvalue" id="r_headrut">—</span>
-      </div>
-
+      <!-- THE BIG NUMBER — this is what people came for -->
       <div class="total-box">
         <div class="tlabel">סך תשלום פרמיה כפוף לתקרה</div>
         <div class="tamount" id="r_total">₪0.00</div>
         <div class="tsub" id="r_total_sub">—</div>
       </div>
-      <div style="margin-top:8px; font-size:11px; color:#475569; text-align:center; line-height:1.6;">
-        ⚠️ כלי עזר בלבד — עשוי להיות מכוייל עד ~₪30 מהתלוש הרשמי
-      </div>
 
       <!-- Progress toward תקרה -->
       <div id="takaraProgress" style="margin-top:14px;"></div>
 
+      <!-- Alert area (threshold warnings) -->
+      <div id="alertArea" style="margin-top:10px;"></div>
+
       <!-- Suggestions -->
       <div id="suggestArea" style="margin-top:10px;"></div>
+
+      <!-- DRILL DOWN: פירוט פרמיות -->
+      <div style="margin-top:14px;">
+        <button onclick="toggleSection('detailPremia')" style="
+          width:100%; padding:10px 14px; border-radius:8px;
+          background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1);
+          color:#94a3b8; font-size:13px; font-weight:600; cursor:pointer;
+          font-family:'Heebo','Arial Hebrew','David',Arial,sans-serif;
+          display:flex; justify-content:space-between; align-items:center;
+        "><span>💰 פירוט פרמיות</span><span id="arrow_detailPremia" style="transition:transform 0.2s;">▼</span></button>
+        <div id="detailPremia" style="display:none; margin-top:6px;">
+          <div class="result-row">
+            <span class="rlabel">פרמיית עבודה (לפני תקרה)</span>
+            <span class="rvalue" id="r_avoda_before">—</span>
+          </div>
+          <div class="result-row accent">
+            <span class="rlabel">פרמיית עבודה — סמל 1783</span>
+            <span class="rvalue" id="r_avoda">—</span>
+          </div>
+          <div class="result-row">
+            <span class="rlabel">פרמיית העדרות (לפני תקרה)</span>
+            <span class="rvalue" id="r_headrut_before">—</span>
+          </div>
+          <div class="result-row accent">
+            <span class="rlabel">פרמיית העדרות — סמל 1785</span>
+            <span class="rvalue" id="r_headrut">—</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- DRILL DOWN: משרה ותקרה -->
+      <div style="margin-top:8px;">
+        <button onclick="toggleSection('detailMishra')" style="
+          width:100%; padding:10px 14px; border-radius:8px;
+          background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1);
+          color:#94a3b8; font-size:13px; font-weight:600; cursor:pointer;
+          font-family:'Heebo','Arial Hebrew','David',Arial,sans-serif;
+          display:flex; justify-content:space-between; align-items:center;
+        "><span>🎯 משרה ותקרה</span><span id="arrow_detailMishra" style="transition:transform 0.2s;">▼</span></button>
+        <div id="detailMishra" style="display:none; margin-top:6px;">
+          <div class="result-row">
+            <span class="rlabel">אחוז משרה בפועל</span>
+            <span class="rvalue" id="r_mishra">—</span>
+          </div>
+          <div class="result-row accent">
+            <span class="rlabel">תקרת תשלום לחודש</span>
+            <span class="rvalue" id="r_takara">—</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- DRILL DOWN: ניתוח ביניים -->
+      <div style="margin-top:8px;">
+        <button onclick="toggleSection('detailCalc')" style="
+          width:100%; padding:10px 14px; border-radius:8px;
+          background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1);
+          color:#94a3b8; font-size:13px; font-weight:600; cursor:pointer;
+          font-family:'Heebo','Arial Hebrew','David',Arial,sans-serif;
+          display:flex; justify-content:space-between; align-items:center;
+        "><span>🔢 ניתוח ביניים</span><span id="arrow_detailCalc" style="transition:transform 0.2s;">▼</span></button>
+        <div id="detailCalc" style="display:none; margin-top:6px;">
+          <div class="result-row">
+            <span class="rlabel">טיפולים משוקללים</span>
+            <span class="rvalue" id="r_tipulim">—</span>
+          </div>
+          <div class="result-row">
+            <span class="rlabel">מכנה (שעות מושקעות)</span>
+            <span class="rvalue" id="r_mecane">—</span>
+          </div>
+          <div class="result-row accent">
+            <span class="rlabel">ממוצע טיפולים לתשלום</span>
+            <span class="rvalue" id="r_avg">—</span>
+          </div>
+          <div class="result-row">
+            <span class="rlabel">סך שעות לתשלום</span>
+            <span class="rvalue" id="r_totalHours">—</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:12px; font-size:11px; color:#475569; text-align:center; line-height:1.6;">
+        ⚠️ כלי עזר בלבד — עשוי להיות מכוייל עד ~₪30 מהתלוש הרשמי
+      </div>
     </div>
 
   </div>
@@ -1034,6 +1063,19 @@ function downloadExcel() {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
+}
+
+// ---- COLLAPSIBLE SECTIONS ----
+function toggleSection(id) {
+  const el = document.getElementById(id);
+  const arrow = document.getElementById('arrow_' + id);
+  if (el.style.display === 'none') {
+    el.style.display = '';
+    arrow.style.transform = 'rotate(180deg)';
+  } else {
+    el.style.display = 'none';
+    arrow.style.transform = '';
+  }
 }
 
 // ---- TAB SWITCHING ----
