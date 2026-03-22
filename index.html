@@ -269,8 +269,15 @@
         <input type="number" inputmode="decimal" id="avgShnati" value="" placeholder="0.00" step="0.01" min="0" max="1" oninput="calc()">
       </div>
 
-      <!-- Reset + Copy Buttons -->
+      <!-- Undo + Reset + Copy Buttons -->
       <div style="display:flex; gap:8px; margin-top:16px;">
+        <button id="undoBtn" onclick="undoFields()" style="
+          flex:1; padding:12px;
+          background: rgba(168,85,247,0.1); border: 1px solid rgba(168,85,247,0.3);
+          border-radius: 8px; color: #c4b5fd; font-size: 13px; font-weight: 600;
+          font-family: 'Heebo', 'Arial Hebrew', 'David', Arial, sans-serif; cursor: pointer;
+          opacity: 0.4;
+        ">↩ בטל</button>
         <button onclick="resetFields()" style="
           flex:1; padding:12px;
           background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3);
@@ -487,6 +494,41 @@ document.addEventListener('touchstart', function(e) {
   }
 })();
 
+// ---- UNDO SYSTEM ----
+const UNDO_FIELDS = ['shaPotential','shaTeken','shaNosfot','shaLaTipulit','headrutMazaka','headrutLoMazaka','tifukot','avgShnati'];
+let undoStack = [];
+const MAX_UNDO = 20;
+
+function saveUndoSnapshot() {
+  const snapshot = {};
+  UNDO_FIELDS.forEach(id => { snapshot[id] = document.getElementById(id).value; });
+  snapshot.isVetek = document.getElementById('takara').value == 5838.25 ? '1' : '0';
+  // Only save if different from last snapshot
+  if (undoStack.length > 0) {
+    const last = undoStack[undoStack.length - 1];
+    const same = UNDO_FIELDS.every(id => last[id] === snapshot[id]) && last.isVetek === snapshot.isVetek;
+    if (same) return;
+  }
+  undoStack.push(snapshot);
+  if (undoStack.length > MAX_UNDO) undoStack.shift();
+  updateUndoBtn();
+}
+
+function undoFields() {
+  if (undoStack.length === 0) return;
+  const snapshot = undoStack.pop();
+  UNDO_FIELDS.forEach(id => { document.getElementById(id).value = snapshot[id] || ''; });
+  if (snapshot.isVetek === '1') setVetek(true); else setVetek(false);
+  updateUndoBtn();
+  calc();
+}
+
+function updateUndoBtn() {
+  const btn = document.getElementById('undoBtn');
+  btn.style.opacity = undoStack.length > 0 ? '1' : '0.4';
+  btn.style.cursor = undoStack.length > 0 ? 'pointer' : 'default';
+}
+
 // ---- LOCAL STORAGE: auto-save & restore ----
 const SAVE_FIELDS = ['shaPotential','shaTeken','shaNosfot','shaLaTipulit','headrutMazaka','headrutLoMazaka','tifukot','avgShnati','takara'];
 
@@ -517,6 +559,7 @@ function loadFromStorage() {
 
 
 function calc() {
+  saveUndoSnapshot();
   const tarif = v('tarif');
   const takara = v('takara');
   const makdam = v('makdam');
@@ -725,6 +768,7 @@ function setVetek(isVetek) {
 }
 
 function resetFields() {
+  saveUndoSnapshot();
   ['shaPotential','shaTeken','shaNosfot','shaLaTipulit','headrutMazaka','headrutLoMazaka','tifukot','avgShnati'].forEach(id => {
     document.getElementById(id).value = '';
   });
