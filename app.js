@@ -757,7 +757,8 @@ const HOLIDAYS = {
   '2026-04-07': { type: 'cholhamoed', name: 'חול המועד פסח (ערב שביעי של פסח)' },
   '2026-04-08': { type: 'chag', name: 'שביעי של פסח' },
   // Yom HaShoah — Apr 14 (Tue) — not a day off at Clalit
-  // Yom HaZikaron — Apr 21 (Tue) — not a day off at Clalit (confirmed by Allison)
+  // Yom HaZikaron — Apr 21 (Tue) — half day at Clalit
+  '2026-04-21': { type: 'erev', name: 'יום הזיכרון' },
   // Yom HaAtzmaut — Apr 22 (Wed)
   '2026-04-22': { type: 'yomAtzmaut', name: 'יום העצמאות' },
   // Shavuot
@@ -802,6 +803,8 @@ const HOLIDAYS = {
   '2027-04-26': { type: 'cholhamoed', name: 'חול המועד פסח' },
   '2027-04-27': { type: 'cholhamoed', name: 'חול המועד פסח (ערב שביעי של פסח)' },
   '2027-04-28': { type: 'chag', name: 'שביעי של פסח' },
+  // Yom HaZikaron — May 11 (Tue) — half day at Clalit
+  '2027-05-11': { type: 'erev', name: 'יום הזיכרון' },
   // Yom HaAtzmaut — May 12 (Wed)
   '2027-05-12': { type: 'yomAtzmaut', name: 'יום העצמאות' },
   // Shavuot
