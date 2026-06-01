@@ -1,5 +1,6 @@
 function v(id) {
-  return parseFloat(document.getElementById(id).value) || 0;
+  const n = parseFloat((document.getElementById(id).value || '').trim().replace(',', '.'));
+  return Number.isFinite(n) ? n : 0;
 }
 function set(id, val, unit) {
   const el = document.getElementById(id);
