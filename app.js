@@ -782,6 +782,8 @@ const HOLIDAYS = {
   '2026-10-01': { type: 'cholhamoed', name: 'חול המועד סוכות' },
   '2026-10-02': { type: 'cholhamoed', name: 'הושענא רבה (חול המועד סוכות)' },
   '2026-10-03': { type: 'chag', name: 'שמיני עצרת / שמחת תורה' },
+  // Election day — Oct 27 (Tue) — שבתון, treated like a chag (0 hours). Her call 2026-09-15.
+  '2026-10-27': { type: 'chag', name: 'יום הבחירות לכנסת (שבתון)' },
   // Chanukah — Dec 5-12 — yom mekutzar (full 8hr for potential)
   '2026-12-05': { type: 'mekutzar', name: 'חנוכה' },
   '2026-12-06': { type: 'mekutzar', name: 'חנוכה' },
